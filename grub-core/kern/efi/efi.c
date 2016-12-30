@@ -484,7 +484,7 @@ grub_efi_print_device_path (grub_efi_device_path_t *dp)
 	  switch (subtype)
 	    {
 	    case GRUB_EFI_END_ENTIRE_DEVICE_PATH_SUBTYPE:
-	      grub_printf ("/EndEntire\n");
+	      //grub_printf ("/EndEntire\n");
 	      //grub_putchar ('\n');
 	      break;
 	    case GRUB_EFI_END_THIS_DEVICE_PATH_SUBTYPE:
