@@ -1683,6 +1683,15 @@ module = {
   enable = noemu;
 };
 
+ module = {
+  name = android;
+  x86 = loader/android.c;
+  i386_pc = lib/i386/pc/vesa_modes_table.c;
+  common = loader/linux.c;
+  common = lib/cmdline.c;
+  enable = noemu;
+};
+
 module = {
   name = fdt;
   arm64 = loader/arm64/fdt.c;
