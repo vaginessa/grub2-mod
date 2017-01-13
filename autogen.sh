@@ -85,3 +85,4 @@ echo timestamp > stamp-h.in
 echo "Running autoreconf..."
 autoreconf -vi
 exit 0
+
