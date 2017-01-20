@@ -40,12 +40,6 @@ void EXPORT_FUNC(grub_efi_stall) (grub_efi_uintn_t microseconds);
 void *
 EXPORT_FUNC(grub_efi_allocate_pages) (grub_efi_physical_address_t address,
 				      grub_efi_uintn_t pages);
-void *
-EXPORT_FUNC(grub_efi_allocate_pages_max) (grub_efi_physical_address_t max,
-					  grub_efi_uintn_t pages);
-void *
-EXPORT_FUNC(grub2_efi_allocate_pages_high) (grub_efi_physical_address_t max,
-					  grub_efi_uint64_t pages, grub_efi_uint64_t align);
 void EXPORT_FUNC(grub_efi_free_pages) (grub_efi_physical_address_t address,
 				       grub_efi_uintn_t pages);
 int
