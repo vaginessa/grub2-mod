@@ -29,14 +29,18 @@
 
 GRUB_MOD_LICENSE ("GPLv3+");
 
+#define DEBUG_PRINT 1
+
 static grub_dl_t my_mod;
 static int loaded;
+static int load_high_enabled;
 static void *kernel_mem;
 static grub_uint64_t kernel_size;
 static grub_uint8_t *initrd_mem;
 static grub_uint32_t handover_offset;
 struct linux_kernel_params *params;
 static char *linux_cmdline;
+static grub_uint64_t load_mem_max = -1UL;
 
 #define BYTES_TO_PAGES(bytes)   (((bytes) + 0xfff) >> 12)
 
@@ -105,9 +109,31 @@ grub_linuxefi_unload (void)
 }
 
 static grub_err_t
+grub_cmd_load_mem_max (grub_command_t cmd __attribute__ ((unused)),
+                 int argc, char *argv[])
+{
+  load_high_enabled = 1;
+
+  if (argc == 0)
+    return 0;
+
+  load_mem_max = grub_strtol(argv[0], NULL, 0);
+
+  if (!load_mem_max)
+    load_high_enabled = 0;
+
+  if (load_mem_max < (1UL<<32))
+    load_mem_max = (1UL<<32);
+
+  return 0;
+}
+
+static grub_err_t
 grub_cmd_initrd (grub_command_t cmd __attribute__ ((unused)),
                  int argc, char *argv[])
 {
+  grub_uint64_t addr_max = 0x3fffffff;
+  int load_high = 0;
   grub_file_t *files = 0;
   int i, nfiles = 0;
   grub_size_t size = 0;
@@ -139,7 +165,15 @@ grub_cmd_initrd (grub_command_t cmd __attribute__ ((unused)),
       size += ALIGN_UP (grub_file_size (files[i]), 4);
     }
 
-  initrd_mem = grub_efi_allocate_pages_max (0x3fffffff, BYTES_TO_PAGES(size));
+  if (load_high_enabled &&
+      params->version > grub_cpu_to_le16 (0x020b) &&
+      params->xloadflags & (1<<1)) /* XLF_CAN_BE_LOADED_ABOVE_4G */
+    {
+      addr_max = load_mem_max;
+      load_high = 1;
+    }
+
+  initrd_mem = grub2_efi_allocate_pages_high (addr_max, BYTES_TO_PAGES(size), 4096);
 
   if (!initrd_mem)
     {
@@ -147,10 +181,21 @@ grub_cmd_initrd (grub_command_t cmd __attribute__ ((unused)),
       goto fail;
     }
 
-  params->ramdisk_size = size;
+  params->ramdisk_size = (grub_uint32_t) size;
   params->ramdisk_image = (grub_uint32_t)(grub_uint64_t) initrd_mem;
+  if ( load_high )
+    {
+      params->ext_ramdisk_image = (grub_uint64_t) initrd_mem >> 32;
+      params->ext_ramdisk_size = size >> 32;
+    }
 
   ptr = initrd_mem;
+
+#ifdef DEBUG_PRINT
+  /* before initrd read */
+  grub_printf("initrd: [%lx,%lx]\n",
+              (unsigned long)initrd_mem, (unsigned long)initrd_mem + size - 1);
+#endif
 
   for (i = 0; i < nfiles; i++)
     {
@@ -167,7 +212,10 @@ grub_cmd_initrd (grub_command_t cmd __attribute__ ((unused)),
       ptr += ALIGN_UP_OVERHEAD (cursize, 4);
     }
 
-  params->ramdisk_size = size;
+#ifdef DEBUG_PRINT
+  /* after initrd read */
+  grub_printf("initrd: read %d file%sdone\n", nfiles, nfiles==1 ? " ": "s ");
+#endif
 
  fail:
   for (i = 0; i < nfiles; i++)
@@ -180,14 +228,27 @@ grub_cmd_initrd (grub_command_t cmd __attribute__ ((unused)),
   return grub_errno;
 }
 
+static void copy_setup_header(unsigned char *param, unsigned char *h)
+{
+	unsigned long setup_header_size = h[0x201] + 0x202 - 0x1f1;
+
+	/* only copy setup_header */
+	if (setup_header_size > 0x7f)
+		setup_header_size = 0x7f;
+	grub_memcpy(param + 0x1f1, h + 0x1f1, setup_header_size);
+}
+
 static grub_err_t
 grub_cmd_linux (grub_command_t cmd __attribute__ ((unused)),
 		int argc, char *argv[])
 {
+  grub_uint64_t addr_max = 0x3fffffff;
+  int load_high = 0;
   grub_file_t file = 0;
   struct linux_kernel_header lh;
-  grub_ssize_t len, start, filelen;
-  void *kernel;
+  grub_ssize_t start, filelen;
+  void *kernel = NULL;
+  int kernel_high = 0;
 
   grub_dl_ref (my_mod);
 
@@ -201,48 +262,11 @@ grub_cmd_linux (grub_command_t cmd __attribute__ ((unused)),
   if (! file)
     goto fail;
 
-  filelen = grub_file_size (file);
-
-  kernel = grub_malloc(filelen);
-
-  if (!kernel)
-    {
-      grub_error (GRUB_ERR_OUT_OF_MEMORY, N_("cannot allocate kernel buffer"));
-      goto fail;
-    }
-
-  if (grub_file_read (file, kernel, filelen) != filelen)
-    {
-      grub_error (GRUB_ERR_FILE_READ_ERROR, N_("Can't read kernel %s"), argv[0]);
-      goto fail;
-    }
-
-  if (! grub_linuxefi_secure_validate (kernel, filelen))
-    {
-      grub_error (GRUB_ERR_INVALID_COMMAND, N_("%s has invalid signature"), argv[0]);
-      grub_free (kernel);
-      goto fail;
-    }
-
-  grub_file_seek (file, 0);
-
-  grub_free(kernel);
-
-  params = grub_efi_allocate_pages_max (0x3fffffff, BYTES_TO_PAGES(16384));
-
-  if (! params)
-    {
-      grub_error (GRUB_ERR_OUT_OF_MEMORY, "cannot allocate kernel parameters");
-      goto fail;
-    }
-
-  grub_memset (params, 0, 16384);
-
   if (grub_file_read (file, &lh, sizeof (lh)) != sizeof (lh))
     {
       if (!grub_errno)
-	grub_error (GRUB_ERR_BAD_OS, N_("premature end of file %s"),
-		    argv[0]);
+        grub_error (GRUB_ERR_BAD_OS, N_("premature end of file %s"),
+                    argv[0]);
       goto fail;
     }
 
@@ -270,8 +294,76 @@ grub_cmd_linux (grub_command_t cmd __attribute__ ((unused)),
       goto fail;
     }
 
-  linux_cmdline = grub_efi_allocate_pages_max(0x3fffffff,
-					 BYTES_TO_PAGES(lh.cmdline_size + 1));
+  if (load_high_enabled &&
+      lh.version > grub_cpu_to_le16 (0x020d) &&
+      lh.xloadflags & (1<<1)) /* XLF_CAN_BE_LOADED_ABOVE_4G */
+    {
+      addr_max = load_mem_max;
+      load_high = 1;
+    }
+
+  filelen = grub_file_size (file);
+
+  kernel = grub_malloc(filelen);
+
+  if (!kernel && !load_high)
+    {
+      grub_error (GRUB_ERR_OUT_OF_MEMORY, N_("cannot allocate kernel buffer"));
+      goto fail;
+    }
+
+  if (!kernel)
+    {
+      kernel = grub2_efi_allocate_pages_high (addr_max, BYTES_TO_PAGES(filelen), 4096);
+      kernel_high = 1;
+    }
+
+  if (!kernel)
+    {
+      grub_error (GRUB_ERR_OUT_OF_MEMORY, N_("cannot allocate kernel buffer"));
+      goto fail;
+    }
+
+  grub_file_seek (file, 0);
+  if (grub_file_read (file, kernel, filelen) != filelen)
+    {
+      grub_error (GRUB_ERR_FILE_READ_ERROR, N_("Can't read kernel %s"), argv[0]);
+      goto fail;
+    }
+  grub_file_close(file);
+  file = 0;
+
+#ifdef DEBUG_PRINT
+  /* after kernel read */
+  grub_printf("kernel: read done\n");
+#endif
+
+  if (! grub_linuxefi_secure_validate (kernel, filelen))
+    {
+      grub_error (GRUB_ERR_INVALID_COMMAND, N_("%s has invalid signature"), argv[0]);
+      goto fail;
+    }
+
+  params = grub2_efi_allocate_pages_high (addr_max, BYTES_TO_PAGES(16384), 4096);
+
+  if (! params)
+    {
+      grub_error (GRUB_ERR_OUT_OF_MEMORY, "cannot allocate kernel parameters");
+      goto fail;
+    }
+
+  grub_memset (params, 0, 16384);
+  copy_setup_header((unsigned char *) params, (unsigned char *) &lh);
+  params->type_of_loader = 0x21;
+
+#ifdef DEBUG_PRINT
+  /* after params */
+  grub_printf("params: [%lx,%lx]\n",
+              (unsigned long)params, (unsigned long)params + 16384 - 1);
+#endif
+
+  linux_cmdline = grub2_efi_allocate_pages_high (addr_max,
+					 BYTES_TO_PAGES(lh.cmdline_size + 1), 4096);
 
   if (!linux_cmdline)
     {
@@ -284,19 +376,26 @@ grub_cmd_linux (grub_command_t cmd __attribute__ ((unused)),
                               linux_cmdline + sizeof (LINUX_IMAGE) - 1,
 			      lh.cmdline_size - (sizeof (LINUX_IMAGE) - 1));
 
-  lh.cmd_line_ptr = (grub_uint32_t)(grub_uint64_t)linux_cmdline;
+  params->cmd_line_ptr = (grub_uint32_t)(grub_uint64_t) linux_cmdline;
+  if ( load_high )
+    params->ext_cmd_line_ptr = (grub_uint64_t) linux_cmdline >> 32;
+
+#ifdef DEBUG_PRINT
+  /* after cmdline */
+  grub_printf("cmdline: [%lx,%lx]\n", (unsigned long)linux_cmdline,
+	      (unsigned long)linux_cmdline + lh.cmdline_size - 1);
+#endif
 
   handover_offset = lh.handover_offset;
 
-  start = (lh.setup_sects + 1) * 512;
-  len = grub_file_size(file) - start;
-
-  kernel_mem = grub_efi_allocate_pages(lh.pref_address,
+  kernel_mem = NULL;
+  if ( !load_high )
+    kernel_mem = grub_efi_allocate_pages(lh.pref_address,
 				       BYTES_TO_PAGES(lh.init_size));
 
   if (!kernel_mem)
-    kernel_mem = grub_efi_allocate_pages_max(0x3fffffff,
-					     BYTES_TO_PAGES(lh.init_size));
+    kernel_mem = grub2_efi_allocate_pages_high (addr_max,
+				     BYTES_TO_PAGES(lh.init_size), lh.kernel_alignment);
 
   if (!kernel_mem)
     {
@@ -304,31 +403,38 @@ grub_cmd_linux (grub_command_t cmd __attribute__ ((unused)),
       goto fail;
     }
 
-  if (grub_file_seek (file, start) == (grub_off_t) -1)
-    {
-      grub_error (GRUB_ERR_BAD_OS, N_("premature end of file %s"),
-		  argv[0]);
-      goto fail;
-    }
+  kernel_size = lh.init_size;
 
-  if (grub_file_read (file, kernel_mem, len) != len && !grub_errno)
-    {
-      grub_error (GRUB_ERR_BAD_OS, N_("premature end of file %s"),
-		  argv[0]);
-    }
+#ifdef DEBUG_PRINT
+  /* after kernel alloc */
+  grub_printf("kernel: [%lx,%lx]\n", (unsigned long)kernel_mem,
+              (unsigned long)kernel_mem + lh.init_size - 1);
+#endif
+
+  start = (lh.setup_sects + 1) * 512;
+  grub_memcpy(kernel_mem, (unsigned char *)kernel + start, filelen - start);
 
   if (grub_errno == GRUB_ERR_NONE)
     {
       grub_loader_set (grub_linuxefi_boot, grub_linuxefi_unload, 0);
       loaded = 1;
-      lh.code32_start = (grub_uint32_t)(grub_uint64_t) kernel_mem;
+      params->code32_start = (grub_uint32_t)(grub_uint64_t) kernel_mem;
+      if ( load_high )
+        {
+          params->ext_code32_start = (grub_uint64_t) kernel_mem >> 32;
+          /* don't not relocate down in kernel eboot.c::efi_main() */
+          params->pref_address = (grub_uint64_t) kernel_mem;
+        }
     }
 
-  grub_memcpy(params, &lh, 2 * 512);
-
-  params->type_of_loader = 0x21;
-
  fail:
+  if (kernel)
+    {
+      if (!kernel_high)
+        grub_free(kernel);
+      else
+        grub_efi_free_pages((grub_efi_physical_address_t)kernel, BYTES_TO_PAGES(filelen));
+    }
 
   if (file)
     grub_file_close (file);
@@ -351,10 +457,14 @@ grub_cmd_linux (grub_command_t cmd __attribute__ ((unused)),
   return grub_errno;
 }
 
-static grub_command_t cmd_linux, cmd_initrd;
+static grub_command_t cmd_linux, cmd_initrd, cmd_load_mem_max;
 
 GRUB_MOD_INIT(linuxefi)
 {
+  cmd_load_mem_max =
+    grub_register_command("loadmemmaxefi", grub_cmd_load_mem_max,
+                          0, N_("Set load_mem_max."));
+
   cmd_linux =
     grub_register_command ("linuxefi", grub_cmd_linux,
                            0, N_("Load Linux."));
@@ -366,6 +476,7 @@ GRUB_MOD_INIT(linuxefi)
 
 GRUB_MOD_FINI(linuxefi)
 {
+  grub_unregister_command (cmd_load_mem_max);
   grub_unregister_command (cmd_linux);
   grub_unregister_command (cmd_initrd);
 }
