@@ -150,17 +150,6 @@ find_section (const struct grub_module_verifier_arch *arch, Elf_Ehdr *e, const c
   return NULL;
 }
 
-static void
-check_license (const struct grub_module_verifier_arch *arch, Elf_Ehdr *e)
-{
-  Elf_Shdr *s = find_section (arch, e, ".module_license");
-  if (s && (strcmp ((char *) e + grub_target_to_host(s->sh_offset), "LICENSE=GPLv3") == 0
-	    || strcmp ((char *) e + grub_target_to_host(s->sh_offset), "LICENSE=GPLv3+") == 0
-	    || strcmp ((char *) e + grub_target_to_host(s->sh_offset), "LICENSE=GPLv2+") == 0))
-    return;
-  grub_util_error ("incompatible license");
-}
-
 static Elf_Sym *
 get_symtab (const struct grub_module_verifier_arch *arch, Elf_Ehdr *e, Elf_Word *size, Elf_Word *entsize)
 {
@@ -357,8 +346,6 @@ SUFFIX(grub_module_verify) (void *module_img, size_t size, const struct grub_mod
     {
       grub_util_error ("ELF sections outside core");
     }
-
-  check_license (arch, e);
 
   Elf_Shdr *s;
 
