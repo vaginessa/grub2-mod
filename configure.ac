@@ -1799,6 +1799,17 @@ fi
 AC_SUBST([LIBZFS])
 AC_SUBST([LIBNVPAIR])
 
+AC_ARG_ENABLE([gfxpayload-dynamic],
+              [AS_HELP_STRING([--enable-gfxpayload-dynamic],
+                              [use GRUB_GFXPAYLOAD_LINUX=keep unless explicitly unsupported on current hardware (default=no)])],
+              [], [enable_gfxpayload_dynamic=no])
+if test x"$enable_gfxpayload_dynamic" = xyes ; then
+  GFXPAYLOAD_DYNAMIC=1
+else
+  GFXPAYLOAD_DYNAMIC=0
+fi
+AC_SUBST([GFXPAYLOAD_DYNAMIC])
+
 LIBS=""
 
 AC_SUBST([FONT_SOURCE])

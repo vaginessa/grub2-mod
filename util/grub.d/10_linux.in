@@ -20,6 +20,7 @@ set -e
 prefix="@prefix@"
 exec_prefix="@exec_prefix@"
 datarootdir="@datarootdir@"
+gfxpayload_dynamic="@GFXPAYLOAD_DYNAMIC@"
 
 . "$pkgdatadir/grub-mkconfig_lib"
 
@@ -104,10 +105,6 @@ linux_entry ()
   # FIXME: We need an interface to select vesafb in case efifb can't be used.
   if [ "x$GRUB_GFXPAYLOAD_LINUX" = x ]; then
       echo "	load_video" | sed "s/^/$submenu_indentation/"
-      if grep -qx "CONFIG_FB_EFI=y" "${config}" 2> /dev/null \
-	  && grep -qx "CONFIG_VT_HW_CONSOLE_BINDING=y" "${config}" 2> /dev/null; then
-	  echo "	set gfxpayload=keep" | sed "s/^/$submenu_indentation/"
-      fi
   else
       if [ "x$GRUB_GFXPAYLOAD_LINUX" != xtext ]; then
 	  echo "	load_video" | sed "s/^/$submenu_indentation/"
@@ -172,6 +169,35 @@ prepare_boot_cache=
 prepare_root_cache=
 boot_device_id=
 title_correction_code=
+
+# Use ELILO's generic "efifb" when it's known to be available.
+# FIXME: We need an interface to select vesafb in case efifb can't be used.
+if [ "x$GRUB_GFXPAYLOAD_LINUX" != x ] || [ "$gfxpayload_dynamic" = 0 ]; then
+  echo "set linux_gfx_mode=$GRUB_GFXPAYLOAD_LINUX"
+else
+  cat << EOF
+if [ "\${recordfail}" != 1 ]; then
+  if [ -e \${prefix}/gfxblacklist.txt ]; then
+    if hwmatch \${prefix}/gfxblacklist.txt 3; then
+      if [ \${match} = 0 ]; then
+        set linux_gfx_mode=keep
+      else
+        set linux_gfx_mode=text
+      fi
+    else
+      set linux_gfx_mode=text
+    fi
+  else
+    set linux_gfx_mode=keep
+  fi
+else
+  set linux_gfx_mode=text
+fi
+EOF
+fi
+cat << EOF
+export linux_gfx_mode
+EOF
 
 # Extra indentation to add to menu entries in a submenu. We're not in a submenu
 # yet, so it's empty. In a submenu it will be equal to '\t' (one tab).

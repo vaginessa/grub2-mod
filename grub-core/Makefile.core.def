@@ -895,6 +895,15 @@ module = {
 };
 
 module = {
+  name = hwmatch;
+  i386_pc = commands/i386/pc/hwmatch.c;
+  enable = i386_pc;
+  common = gnulib/regex.c;
+  cflags = '$(CFLAGS_POSIX) $(CFLAGS_GNULIB)';
+  cppflags = '$(CPPFLAGS_POSIX) $(CPPFLAGS_GNULIB)';
+};
+
+module = {
   name = keystatus;
   common = commands/keystatus.c;
 };
@@ -1761,6 +1770,14 @@ module = {
 };
 
 module = {
+  name = linuxefi;
+  efi = loader/i386/efi/linux.c;
+  efi = lib/cmdline.c;
+  enable = i386_efi;
+  enable = x86_64_efi;
+};
+
+module = {
   name = chain;
   efi = loader/efi/chainloader.c;
   i386_pc = loader/i386/pc/chainloader.c;
@@ -2116,6 +2133,12 @@ module = {
 module = {
   name = vbe;
   common = video/i386/pc/vbe.c;
+  enable = i386_pc;
+};
+
+module = {
+  name = '915resolution';
+  i386_pc = video/i386/pc/915resolution.c;
   enable = i386_pc;
 };
 
