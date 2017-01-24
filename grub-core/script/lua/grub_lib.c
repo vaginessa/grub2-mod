@@ -26,6 +26,7 @@
 #include <grub/command.h>
 #include <grub/normal.h>
 #include <grub/file.h>
+#include <grub/menu.h>
 #include <grub/device.h>
 
 #ifdef ENABLE_LUA_PCI
@@ -513,6 +514,87 @@ grub_lua_add_menu (lua_State *state)
   return push_result (state);
 }
 
+static int
+grub_lua_read_byte (lua_State *state)
+{
+  grub_addr_t addr;
+
+  addr = luaL_checkinteger (state, 1);
+  lua_pushinteger (state, *((grub_uint8_t *) addr));
+  return 1;
+}
+
+static int
+grub_lua_read_word (lua_State *state)
+{
+  grub_addr_t addr;
+
+  addr = luaL_checkinteger (state, 1);
+  lua_pushinteger (state, *((grub_uint16_t *) addr));
+  return 1;
+}
+
+static int
+grub_lua_read_dword (lua_State *state)
+{
+  grub_addr_t addr;
+
+  addr = luaL_checkinteger (state, 1);
+  lua_pushinteger (state, *((grub_uint32_t *) addr));
+  return 1;
+}
+
+static int
+grub_lua_write_byte (lua_State *state)
+{
+  grub_addr_t addr;
+
+  addr = luaL_checkinteger (state, 1);
+  *((grub_uint8_t *) addr) = luaL_checkinteger (state, 2);
+  return 1;
+}
+
+static int
+grub_lua_write_word (lua_State *state)
+{
+  grub_addr_t addr;
+
+  addr = luaL_checkinteger (state, 1);
+  *((grub_uint16_t *) addr) = luaL_checkinteger (state, 2);
+  return 1;
+}
+
+static int
+grub_lua_write_dword (lua_State *state)
+{
+  grub_addr_t addr;
+
+  addr = luaL_checkinteger (state, 1);
+  *((grub_uint32_t *) addr) = luaL_checkinteger (state, 2);
+  return 1;
+}
+
+static int
+grub_lua_cls (lua_State *state __attribute__ ((unused)))
+{
+  grub_cls ();
+  return 0;
+}
+
+static int
+grub_lua_setcolorstate (lua_State *state)
+{
+  grub_setcolorstate (luaL_checkinteger (state, 1));
+  return 0;
+}
+
+static int
+grub_lua_refresh (lua_State *state __attribute__ ((unused)))
+{
+  grub_refresh ();
+  return 0;
+}
+
 luaL_Reg grub_lua_lib[] =
   {
     {"run", grub_lua_run},
@@ -533,5 +615,14 @@ luaL_Reg grub_lua_lib[] =
     {"file_eof", grub_lua_file_eof},
     {"file_exist", grub_lua_file_exist},
     {"add_menu", grub_lua_add_menu},
+    {"read_byte", grub_lua_read_byte},
+    {"read_word", grub_lua_read_word},
+    {"read_dword", grub_lua_read_dword},
+    {"write_byte", grub_lua_write_byte},
+    {"write_word", grub_lua_write_word},
+    {"write_dword", grub_lua_write_dword},
+    {"cls", grub_lua_cls},
+    {"setcolorstate", grub_lua_setcolorstate},
+    {"refresh", grub_lua_refresh},
     {0, 0}
   };
