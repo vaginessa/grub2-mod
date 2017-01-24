@@ -853,6 +853,13 @@ module = {
 };
 
 module = {
+  name = getefienv;
+  common = commands/efi/getefienv.c;
+  enable = i386_efi;
+  enable = x86_64_efi;
+};
+
+module = {
   name = gptsync;
   common = commands/gptsync.c;
 };
