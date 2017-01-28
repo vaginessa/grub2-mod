@@ -1,4 +1,4 @@
-/* getenv.c - retrieve EFI variables.  */
+/* getefienv.c - retrieve EFI variables.  */
 /*
  *  GRUB  --  GRand Unified Bootloader
  *  Copyright (C) 2009  Free Software Foundation, Inc.
