@@ -864,6 +864,16 @@ module = {
 };
 
 module = {
+  name = gptrepair;
+  common = commands/gptrepair.c;
+};
+
+module = {
+  name = gpt;
+  common = lib/gpt.c;
+};
+
+module = {
   name = halt;
   nopc = commands/halt.c;
   i386_pc = commands/i386/pc/halt.c;
@@ -1081,6 +1091,21 @@ module = {
 module = {
   name = search_label;
   common = commands/search_label.c;
+};
+
+module = {
+  name = search_disk_uuid;
+  common = commands/search_disk_uuid.c;
+};
+
+module = {
+  name = search_part_uuid;
+  common = commands/search_part_uuid.c;
+};
+
+module = {
+  name = search_part_label;
+  common = commands/search_part_label.c;
 };
 
 module = {
