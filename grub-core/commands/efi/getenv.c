@@ -1,4 +1,4 @@
-/* getefienv.c - retrieve EFI variables.  */
+/* getenv.c - retrieve EFI variables.  */
 /*
  *  GRUB  --  GRand Unified Bootloader
  *  Copyright (C) 2009  Free Software Foundation, Inc.
@@ -29,7 +29,7 @@
 
 GRUB_MOD_LICENSE ("GPLv3+");
 
-static const struct grub_arg_option options_getefienv[] = {
+static const struct grub_arg_option options_getenv[] = {
   {"var-name", 'e', 0,
    N_("Environment variable to query"),
    N_("VARNAME"), ARG_TYPE_STRING},
@@ -42,7 +42,7 @@ static const struct grub_arg_option options_getefienv[] = {
   {0, 0, 0, 0, 0, 0}
 };
 
-enum options_getefienv
+enum options_getenv
 {
   GETENV_VAR_NAME,
   GETENV_VAR_GUID,
@@ -50,7 +50,7 @@ enum options_getefienv
 };
 
 static grub_err_t
-grub_cmd_getefienv (grub_extcmd_context_t ctxt, int argc, char **args)
+grub_cmd_getenv (grub_extcmd_context_t ctxt, int argc, char **args)
 {
   struct grub_arg_list *state = ctxt->state;
   char *envvar = NULL, *guid = NULL, *bindata = NULL, *data = NULL;
@@ -119,10 +119,10 @@ grub_cmd_getefienv (grub_extcmd_context_t ctxt, int argc, char **args)
     {
       bindata = grub_zalloc(datasize * 2 + 1);
       for (i=0; i<datasize; i++)
-         grub_snprintf(bindata + i*2, 3, "%02x", data[i]);
+	  grub_snprintf(bindata + i*2, 3, "%02x", data[i] & 0xff);
 
       if (grub_env_set (args[0], bindata))
-       goto done;
+	goto done;
     }
   else if (grub_env_set (args[0], data))
     {
@@ -137,17 +137,17 @@ done:
   return grub_errno;
 }
 
-static grub_extcmd_t cmd_getefienv;
+static grub_extcmd_t cmd_getenv;
 
-GRUB_MOD_INIT(getefienv)
+GRUB_MOD_INIT(getenv)
 {
-  cmd_getefienv = grub_register_extcmd ("getefienv", grub_cmd_getefienv, 0,
-                                  N_("-e envvar -g guidenv setvar"),
-                                  N_("Read a firmware environment variable"),
-                                  options_getefienv);
+  cmd_getenv = grub_register_extcmd ("getenv", grub_cmd_getenv, 0,
+				   N_("-e envvar -g guidenv setvar"),
+				   N_("Read a firmware environment variable"),
+				   options_getenv);
 }
 
-GRUB_MOD_FINI(getefienv)
+GRUB_MOD_FINI(getenv)
 {
-  grub_unregister_extcmd (cmd_getefienv);
+  grub_unregister_extcmd (cmd_getenv);
 }

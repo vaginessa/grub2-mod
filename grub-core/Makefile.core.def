@@ -853,10 +853,9 @@ module = {
 };
 
 module = {
-  name = getefienv;
-  common = commands/efi/getefienv.c;
-  enable = i386_efi;
-  enable = x86_64_efi;
+  name = getenv;
+  common = commands/efi/getenv.c;
+  enable = efi;
 };
 
 module = {
