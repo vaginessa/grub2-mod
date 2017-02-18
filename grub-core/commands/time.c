@@ -1,4 +1,3 @@
-/* echo.c - Command to display a line of text  */
 /*
  *  GRUB  --  GRand Unified Bootloader
  *  Copyright (C) 2011  Free Software Foundation, Inc.
