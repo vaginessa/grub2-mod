@@ -29,6 +29,7 @@
 #include <grub/file.h>
 #include <grub/menu.h>
 #include <grub/device.h>
+#include <grub/lib/crc.h>
 
 #ifdef ENABLE_LUA_PCI
 #include <grub/pci.h>
@@ -670,6 +671,26 @@ grub_lua_file_exist (lua_State *state)
 }
 
 static int
+grub_lua_file_crc32 (lua_State *state)
+{
+  grub_file_t file;
+  const char *name;
+  int crc;
+  char buf[GRUB_DISK_SECTOR_SIZE];
+  grub_ssize_t size;
+  name = luaL_checkstring (state, 1);
+  file = grub_file_open (name);
+  if (file)
+    {
+      crc = 0;
+      while ((size = grub_file_read (file, buf, sizeof (buf))) > 0)
+        crc = grub_getcrc32c (crc, buf, size);
+      lua_pushinteger (state, crc);
+    }
+  return 1;
+}
+
+static int
 grub_lua_add_menu (lua_State *state)
 {
   int n;
@@ -883,6 +904,7 @@ luaL_Reg grub_lua_lib[] =
     {"file_getpos", grub_lua_file_getpos},
     {"file_eof", grub_lua_file_eof},
     {"file_exist", grub_lua_file_exist},
+    {"file_crc32", grub_lua_file_crc32},
     {"add_menu", grub_lua_add_menu},
     {"read_byte", grub_lua_read_byte},
     {"read_word", grub_lua_read_word},
