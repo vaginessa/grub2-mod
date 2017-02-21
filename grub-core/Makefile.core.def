@@ -1246,6 +1246,11 @@ module = {
 };
 
 module = {
+  name = raiddump;
+  common = commands/raiddump.c;
+};
+
+module = {
   name = raid5rec;
   common = disk/raid5_recover.c;
 };
@@ -1871,6 +1876,13 @@ module = {
   common = loader/macho64.c;
   common = loader/lzss.c;
   extra_dist = loader/machoXX.c;
+};
+
+module = {
+  name = apple_gmux;
+  common = commands/efi/apple_gmux.c;
+  enable = i386_efi;
+  enable = x86_64_efi;
 };
 
 module = {
