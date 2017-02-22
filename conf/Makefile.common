@@ -90,6 +90,9 @@ CPPFLAGS_MARKER = $(CPPFLAGS_FS_LIST) $(CPPFLAGS_VIDEO_LIST) \
 	$(CPPFLAGS_PARTTOOL_LIST) $(CPPFLAGS_PARTMAP_LIST) \
 	$(CPPFLAGS_TERMINAL_LIST) $(CPPFLAGS_COMMAND_LIST)
 
+GPXE_CPPFLAGS = '-DFILE_LICENCE(x)=' -I$(srcdir)/gpxe/src/include -I$(srcdir)/gpxe/include_wrap
+GPXE_CFLAGS = -Wno-pointer-arith -Wno-error
+
 # Define these variables to calm down automake
 
 IMG_FILES =

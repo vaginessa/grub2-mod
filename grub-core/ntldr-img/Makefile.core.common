@@ -15,7 +15,7 @@ grldr.mbr: grldr.img
 	head -c 8192 $< > $@
 CLEANFILES += grldr.mbr
 
-bin2h: contrib/ntldr-img/bin2h.c
+bin2h: ntldr-img/bin2h.c
 	$(BUILD_CC) $(BUILD_CFLAGS) $(BUILD_CPPFLAGS) $(BUILD_LDFLAGS) $^ -o $@
 CLEANFILES += bin2h
 
@@ -23,8 +23,8 @@ grub_mbr.h: grldr.mbr bin2h
 	./bin2h grub_mbr 8192 < $< > $@
 CLEANFILES += grub_mbr.h
 
-grub-ntldr-img$(EXEEXT): contrib/ntldr-img/grubinst.c contrib/ntldr-img/utils.c grub_mbr.h
-	$(HOST_CC) $(HOST_CFLAGS) $(HOST_CPPFLAGS) $(HOST_LDFLAGS) -DGRUB_UTIL=1 -I. -I$(srcdir)/contrib/ntldr-img -DLINUX -o $@ $(srcdir)/contrib/ntldr-img/grubinst.c $(srcdir)/contrib/ntldr-img/utils.c
+grub-ntldr-img$(EXEEXT): ntldr-img/grubinst.c ntldr-img/utils.c grub_mbr.h
+	$(HOST_CC) $(HOST_CFLAGS) $(HOST_CPPFLAGS) $(HOST_LDFLAGS) -DGRUB_UTIL=1 -I. -I$(srcdir)/ntldr-img -DLINUX -o $@ $(srcdir)/ntldr-img/grubinst.c $(srcdir)/ntldr-img/utils.c
 bin_PROGRAMS += grub-ntldr-img
 CLEANFILES += grub-ntldr-img
 

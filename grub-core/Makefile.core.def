@@ -2539,3 +2539,436 @@ module = {
   common = commands/fwconfig.c;
   enable = x86;
 };
+
+module = {
+  name = gpxe;
+  common = gpxe/wrap/wrap.c;
+  common = gpxe/wrap/pci.c;
+  common = gpxe/wrap/nic.c;
+  common = gpxe/src/net/80211/net80211.c;
+  common = gpxe/src/net/80211/rc80211.c;
+  common = gpxe/src/net/arp.c;
+  common = gpxe/src/net/dhcpopts.c;
+  common = gpxe/src/net/dhcppkt.c;
+  common = gpxe/src/net/ethernet.c;
+  common = gpxe/src/net/fakedhcp.c;
+  common = gpxe/src/net/icmp.c;
+  common = gpxe/src/net/iobpad.c;
+  common = gpxe/src/net/ipv4.c;
+  common = gpxe/src/net/netdevice.c;
+  common = gpxe/src/net/netdev_settings.c;
+  common = gpxe/src/net/nullnet.c;
+  common = gpxe/src/net/rarp.c;
+  common = gpxe/src/net/retry.c;
+  common = gpxe/src/net/tcp/http.c;
+  common = gpxe/src/net/tcp.c;
+  common = gpxe/src/net/tcpip.c;
+  common = gpxe/src/net/udp/dhcp.c;
+  common = gpxe/src/net/udp/dns.c;
+  common = gpxe/src/net/udp/slam.c;
+  common = gpxe/src/net/udp/tftp.c;
+  common = gpxe/src/net/udp.c;
+  common = gpxe/src/core/base64.c;
+  common = gpxe/src/core/nvo.c;
+  common = gpxe/src/core/uri.c;
+  common = gpxe/src/core/uuid.c;
+  common = gpxe/src/core/random.c;
+  common = gpxe/src/core/open.c;
+  common = gpxe/src/core/cwuri.c;
+  common = gpxe/src/core/linebuf.c;
+  common = gpxe/src/core/xfer.c;
+  common = gpxe/src/core/settings.c;
+  common = gpxe/src/core/iobuf.c;
+  common = gpxe/src/core/refcnt.c;
+  common = gpxe/src/core/bitmap.c;
+  common = gpxe/src/core/process.c;
+  common = gpxe/src/core/job.c;
+  common = gpxe/src/core/resolv.c;
+  common = gpxe/src/core/interface.c;
+  common = gpxe/src/core/basename.c;
+  common = gpxe/src/core/misc.c;
+  common = gpxe/src/hci/strerror.c;
+  cppflags = '$(GPXE_CPPFLAGS)';
+  cflags = '$(GPXE_CFLAGS)';
+};
+
+module = {
+  name = gpxe_infiniband;
+  common = gpxe/src/net/infiniband/ib_cm.c;
+  common = gpxe/src/net/infiniband/ib_cmrc.c;
+  common = gpxe/src/net/infiniband/ib_mcast.c;
+  common = gpxe/src/net/infiniband/ib_mi.c;
+  common = gpxe/src/net/infiniband/ib_packet.c;
+  common = gpxe/src/net/infiniband/ib_pathrec.c;
+  common = gpxe/src/net/infiniband/ib_sma.c;
+  common = gpxe/src/net/infiniband/ib_smc.c;
+  common = gpxe/src/net/infiniband/ib_srp.c;
+  common = gpxe/src/net/infiniband.c;
+  common = gpxe/src/drivers/net/ipoib.c;
+  common = gpxe/src/drivers/block/scsi.c;
+  cppflags = '$(GPXE_CPPFLAGS)';
+  cflags = '$(GPXE_CFLAGS)';
+};
+
+module = {
+  name = gpxe_3c529;
+  common = gpxe/src/drivers/net/3c529.c;
+  cppflags = '$(GPXE_CPPFLAGS)';
+  cflags = '$(GPXE_CFLAGS)';
+};
+
+module = {
+  name = gpxe_3c595;
+  common = gpxe/src/drivers/net/3c595.c;
+  cppflags = '$(GPXE_CPPFLAGS)';
+  cflags = '$(GPXE_CFLAGS)';
+};
+
+module = {
+  name = gpxe_3c5x9;
+  common = gpxe/src/drivers/net/3c5x9.c;
+  cppflags = '$(GPXE_CPPFLAGS)';
+  cflags = '$(GPXE_CFLAGS)';
+};
+
+module = {
+  name = gpxe_3c90x;
+  common = gpxe/src/drivers/net/3c90x.c;
+  cppflags = '$(GPXE_CPPFLAGS)';
+  cflags = '$(GPXE_CFLAGS)';
+};
+
+module = {
+  name = gpxe_davicom;
+  common = gpxe/src/drivers/net/davicom.c;
+  cppflags = '$(GPXE_CPPFLAGS)';
+  cflags = '$(GPXE_CFLAGS)';
+};
+
+#if 0
+/* Not fixed for relocation yet.  */
+module = {
+  name = gpxe_depca;
+  common = gpxe/src/drivers/net/depca.c;
+  cppflags = '$(GPXE_CPPFLAGS)';
+  cflags = '$(GPXE_CFLAGS)';
+};
+#endif
+
+module = {
+  name = gpxe_dmfe;
+  common = gpxe/src/drivers/net/dmfe.c;
+  cppflags = '$(GPXE_CPPFLAGS)';
+  cflags = '$(GPXE_CFLAGS)';
+};
+
+module = {
+  name = gpxe_eepro100;
+  common = gpxe/src/drivers/net/eepro100.c;
+  cppflags = '$(GPXE_CPPFLAGS)';
+  cflags = '$(GPXE_CFLAGS)';
+};
+
+module = {
+  name = gpxe_eepro;
+  common = gpxe/src/drivers/net/eepro.c;
+  cppflags = '$(GPXE_CPPFLAGS)';
+  cflags = '$(GPXE_CFLAGS)';
+};
+
+module = {
+  name = gpxe_epic100;
+  common = gpxe/src/drivers/net/epic100.c;
+  cppflags = '$(GPXE_CPPFLAGS)';
+  cflags = '$(GPXE_CFLAGS)';
+};
+
+module = {
+  name = gpxe_ipoib;
+  common = gpxe/src/drivers/net/ipoib.c;
+  cppflags = '$(GPXE_CPPFLAGS)';
+  cflags = '$(GPXE_CFLAGS)';
+};
+
+module = {
+  name = gpxe_legacy;
+  common = gpxe/src/drivers/net/legacy.c;
+  cppflags = '$(GPXE_CPPFLAGS)';
+  cflags = '$(GPXE_CFLAGS)';
+};
+
+module = {
+  name = gpxe_natsemi;
+  common = gpxe/src/drivers/net/natsemi.c;
+  cppflags = '$(GPXE_CPPFLAGS)';
+  cflags = '$(GPXE_CFLAGS)';
+};
+
+module = {
+  name = gpxe_ne2k_isa;
+  common = gpxe/src/drivers/net/ne2k_isa.c;
+  cppflags = '$(GPXE_CPPFLAGS)';
+  cflags = '$(GPXE_CFLAGS)';
+};
+
+module = {
+  name = gpxe_ns83820;
+  common = gpxe/src/drivers/net/ns83820.c;
+  cppflags = '$(GPXE_CPPFLAGS)';
+  cflags = '$(GPXE_CFLAGS)';
+};
+
+module = {
+  name = gpxe_ns8390;
+  common = gpxe/src/drivers/net/ns8390.c;
+  cppflags = '$(GPXE_CPPFLAGS)';
+  cflags = '$(GPXE_CFLAGS)';
+};
+
+module = {
+  name = gpxe_pnic;
+  common = gpxe/src/drivers/net/pnic.c;
+  cppflags = '$(GPXE_CPPFLAGS)';
+  cflags = '$(GPXE_CFLAGS)';
+};
+
+module = {
+  name = gpxe_rtl8139;
+  common = gpxe/src/drivers/net/rtl8139.c;
+  cppflags = '$(GPXE_CPPFLAGS)';
+  cflags = '$(GPXE_CFLAGS)';
+};
+
+module = {
+  name = gpxe_sis900;
+  common = gpxe/src/drivers/net/sis900.c;
+  cppflags = '$(GPXE_CPPFLAGS)';
+  cflags = '$(GPXE_CFLAGS)';
+};
+
+module = {
+  name = gpxe_smc9000;
+  common = gpxe/src/drivers/net/smc9000.c;
+  cppflags = '$(GPXE_CPPFLAGS)';
+  cflags = '$(GPXE_CFLAGS)';
+};
+
+module = {
+  name = gpxe_tulip;
+  common = gpxe/src/drivers/net/tulip.c;
+  cppflags = '$(GPXE_CPPFLAGS)';
+  cflags = '$(GPXE_CFLAGS)';
+};
+
+module = {
+  name = gpxe_w89c840;
+  common = gpxe/src/drivers/net/w89c840.c;
+  /* Fails to preprocess without -Os!  */
+  cppflags = '$(GPXE_CPPFLAGS) -Os';
+  cflags = '$(GPXE_CFLAGS)';
+};
+
+module = {
+  name = gpxe_nvs;
+  common = gpxe/src/drivers/nvs/nvs.c;
+  cppflags = '$(GPXE_CPPFLAGS)';
+  cflags = '$(GPXE_CFLAGS)';
+};
+
+module = {
+  name = gpxe_spi;
+  common = gpxe/src/drivers/nvs/spi.c;
+  cppflags = '$(GPXE_CPPFLAGS)';
+  cflags = '$(GPXE_CFLAGS)';
+};
+
+module = {
+  name = gpxe_threewire;
+  common = gpxe/src/drivers/nvs/threewire.c;
+  cppflags = '$(GPXE_CPPFLAGS)';
+  cflags = '$(GPXE_CFLAGS)';
+};
+
+module = {
+  name = gpxe_bitbash;
+  common = gpxe/src/drivers/bitbash/bitbash.c;
+  cppflags = '$(GPXE_CPPFLAGS)';
+  cflags = '$(GPXE_CFLAGS)';
+};
+
+module = {
+  name = gpxe_i2c_bit;
+  common = gpxe/src/drivers/bitbash/i2c_bit.c;
+  cppflags = '$(GPXE_CPPFLAGS)';
+  cflags = '$(GPXE_CFLAGS)';
+};
+
+module = {
+  name = gpxe_spi_bit;
+  common = gpxe/src/drivers/bitbash/spi_bit.c;
+  cppflags = '$(GPXE_CPPFLAGS)';
+  cflags = '$(GPXE_CFLAGS)';
+};
+
+#if 0
+
+/* Following ones require MII support which is GPLv2.  */
+
+module = {
+  name = gpxe_amd8111e;
+  common = gpxe/src/drivers/net/amd8111e.c;
+  cppflags = '$(GPXE_CPPFLAGS)';
+  cflags = '$(GPXE_CFLAGS)';
+};
+
+module = {
+  name = gpxe_atl1e;
+  common = gpxe/src/drivers/net/atl1e.c;
+  cppflags = '$(GPXE_CPPFLAGS)';
+  cflags = '$(GPXE_CFLAGS)';
+};
+
+module = {
+  name = gpxe_b44;
+  common = gpxe/src/drivers/net/b44.c;
+  cppflags = '$(GPXE_CPPFLAGS)';
+  cflags = '$(GPXE_CFLAGS)';
+};
+
+module = {
+  name = gpxe_bnx2;
+  common = gpxe/src/drivers/net/bnx2.c;
+  cppflags = '$(GPXE_CPPFLAGS)';
+  cflags = '$(GPXE_CFLAGS)';
+};
+
+module = {
+  name = gpxe_etherfabric;
+  common = gpxe/src/drivers/net/etherfabric.c;
+  cppflags = '$(GPXE_CPPFLAGS)';
+  cflags = '$(GPXE_CFLAGS)';
+};
+
+module = {
+  name = gpxe_forcedeth;
+  common = gpxe/src/drivers/net/forcedeth.c;
+  cppflags = '$(GPXE_CPPFLAGS)';
+  cflags = '$(GPXE_CFLAGS)';
+};
+
+module = {
+  name = gpxe_pcnet32;
+  common = gpxe/src/drivers/net/pcnet32.c;
+  cppflags = '$(GPXE_CPPFLAGS)';
+  cflags = '$(GPXE_CFLAGS)';
+};
+
+module = {
+  name = gpxe_mtd80x;
+  common = gpxe/src/drivers/net/mtd80x.c;
+  cppflags = '$(GPXE_CPPFLAGS)';
+  cflags = '$(GPXE_CFLAGS)';
+};
+
+module = {
+  name = gpxe_r8169;
+  common = gpxe/src/drivers/net/r8169.c;
+  cppflags = '$(GPXE_CPPFLAGS)';
+  cflags = '$(GPXE_CFLAGS)';
+};
+
+module = {
+  name = gpxe_sundance;
+  common = gpxe/src/drivers/net/sundance.c;
+  cppflags = '$(GPXE_CPPFLAGS)';
+  cflags = '$(GPXE_CFLAGS)';
+};
+
+module = {
+  name = gpxe_tlan;
+  common = gpxe/src/drivers/net/tlan.c;
+  cppflags = '$(GPXE_CPPFLAGS)';
+  cflags = '$(GPXE_CFLAGS)';
+};
+
+/* Following is wireless (disabled for now).  */
+
+module = {
+  name = gpxe_prism2;
+  common = gpxe/src/drivers/net/prism2.c;
+  cppflags = '$(GPXE_CPPFLAGS)';
+  cflags = '$(GPXE_CFLAGS)';
+};
+
+module = {
+  name = gpxe_prism2_plx;
+  common = gpxe/src/drivers/net/prism2_plx.c;
+  cppflags = '$(GPXE_CPPFLAGS)';
+  cflags = '$(GPXE_CFLAGS)';
+};
+
+module = {
+  name = gpxe_ath5k;
+  common = gpxe/src/drivers/net/ath5k/ath5k_attach.c;
+  common = gpxe/src/drivers/net/ath5k/ath5k.c;
+  common = gpxe/src/drivers/net/ath5k/ath5k_caps.c;
+  common = gpxe/src/drivers/net/ath5k/ath5k_desc.c;
+  common = gpxe/src/drivers/net/ath5k/ath5k_dma.c;
+  common = gpxe/src/drivers/net/ath5k/ath5k_eeprom.c;
+  common = gpxe/src/drivers/net/ath5k/ath5k_gpio.c;
+  common = gpxe/src/drivers/net/ath5k/ath5k_initvals.c;
+  common = gpxe/src/drivers/net/ath5k/ath5k_pcu.c;
+  common = gpxe/src/drivers/net/ath5k/ath5k_phy.c;
+  common = gpxe/src/drivers/net/ath5k/ath5k_qcu.c;
+  common = gpxe/src/drivers/net/ath5k/ath5k_reset.c;
+  cppflags = '$(GPXE_CPPFLAGS)';
+  cflags = '$(GPXE_CFLAGS)';
+};
+
+/* Following require ISA/ISAPNP.  Disable for now.  */
+
+module = {
+  name = gpxe_3c509;
+  common = gpxe/src/drivers/net/3c509.c;
+  cppflags = '$(GPXE_CPPFLAGS)';
+  cflags = '$(GPXE_CFLAGS)';
+};
+
+module = {
+  name = gpxe_3c515;
+  common = gpxe/src/drivers/net/3c515.c;
+  cppflags = '$(GPXE_CPPFLAGS)';
+  cflags = '$(GPXE_CFLAGS)';
+};
+
+/* Following uses crypto.  Disable for now.  */
+
+module = {
+  name = https;
+  common = gpxe/src/net/tcp/https.c;
+  cppflags = '$(GPXE_CPPFLAGS)';
+  cflags = '$(GPXE_CFLAGS)';
+};
+
+module = {
+  name = tls;
+  common = gpxe/src/net/tls.c;
+  cppflags = '$(GPXE_CPPFLAGS)';
+  cflags = '$(GPXE_CFLAGS)';
+};
+
+module = {
+  name = aoe;
+  common = gpxe/src/net/aoe.c;
+  cppflags = '$(GPXE_CPPFLAGS)';
+  cflags = '$(GPXE_CFLAGS)';
+};
+
+module = {
+  name = iscsi;
+  common = gpxe/src/net/tcp/iscsi.c;
+  cppflags = '$(GPXE_CPPFLAGS)';
+  cflags = '$(GPXE_CFLAGS)';
+};
+
+#endif
