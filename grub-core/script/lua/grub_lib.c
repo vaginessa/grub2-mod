@@ -26,6 +26,7 @@
 #include <grub/parser.h>
 #include <grub/command.h>
 #include <grub/normal.h>
+#include <grub/term.h>
 #include <grub/file.h>
 #include <grub/menu.h>
 #include <grub/device.h>
@@ -885,6 +886,24 @@ static int grub_lua_toutf8(lua_State *L) {
             luaL_typename(L, 1));
 }
 
+static int
+grub_lua_getkey_noblock (lua_State *state __attribute__ ((unused)))
+{
+  int key;
+  key = grub_getkey_noblock ();
+  lua_pushinteger (state, key);
+  return 1;
+}
+
+static int
+grub_lua_getkey (lua_State *state __attribute__ ((unused)))
+{
+  int key;
+  key = grub_getkey ();
+  lua_pushinteger (state, key);
+  return 1;
+}
+
 luaL_Reg grub_lua_lib[] =
   {
     {"run", grub_lua_run},
@@ -920,5 +939,7 @@ luaL_Reg grub_lua_lib[] =
     {"char", grub_lua_char},
     {"fromutf8", grub_lua_fromutf8},
     {"toutf8", grub_lua_toutf8},
+    {"getkey_noblock", grub_lua_getkey_noblock},
+    {"getkey", grub_lua_getkey},
     {0, 0}
   };
