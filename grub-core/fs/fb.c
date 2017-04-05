@@ -25,6 +25,8 @@
 #include <grub/fbfs.h>
 #include <grub/fshelp.h>
 
+GRUB_MOD_LICENSE ("GPLv3+");
+
 struct grub_fb_data
 {
   grub_uint32_t ofs;
