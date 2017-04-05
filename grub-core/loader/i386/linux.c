@@ -1,6 +1,6 @@
 /*
  *  GRUB  --  GRand Unified Bootloader
- *  Copyright (C) 2006,2007,2008,2009,2010  Free Software Foundation, Inc.
+ *  Copyright (C) 2006,2007,2008,2009,2010,2017  Free Software Foundation, Inc.
  *
  *  GRUB is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -1021,10 +1021,13 @@ grub_cmd_linux (grub_command_t cmd __attribute__ ((unused)),
 	      {
 	      case 'g':
 		shift += 10;
+		/* FALLTHROUGH */
 	      case 'm':
 		shift += 10;
+		/* FALLTHROUGH */
 	      case 'k':
 		shift += 10;
+		/* FALLTHROUGH */
 	      default:
 		break;
 	      }
