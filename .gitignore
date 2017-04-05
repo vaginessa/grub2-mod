@@ -78,7 +78,12 @@ grub-macho2img
 grub-mount
 /grub-ofpathname
 /grub-ofpathname.exe
+grub-core/bin2h
 grub-core/build-grub-pe2elf.exe
+grub-core/g2*dr.mbr
+grub-core/grub-ntldr-img
+grub-core/grub_mbr.h
+grub-core/grubinst
 /grub-probe
 /grub-probe.exe
 grub_probe_init.c
