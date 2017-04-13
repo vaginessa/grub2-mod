@@ -25,26 +25,6 @@
 
 GRUB_MOD_LICENSE ("GPLv3+");
 
-void itoa(int number,char *str);
-void itoa(int number,char *str)
-{
-  char ch[20],*p=str;
-  int sign=1,i;
-  if(number<0)
-    {
-      sign=-1;
-      number=-number;
-    }
-  for(i=0;number!=0;number/=10,i++)
-    ch[i]=number%10 + '0';
-  if(sign==-1)
-    *p='-';
-  i--;
-  for(;i>=0;i--,p++)
-    *p=ch[i];
-  *p='\0';
-}
-
 static grub_err_t
 grub_cmd_getkey (grub_command_t cmd __attribute__ ((unused)),
 	      int argc, char **args)
@@ -57,7 +37,7 @@ grub_cmd_getkey (grub_command_t cmd __attribute__ ((unused)),
   grub_printf ("%d\n", key);
   if (argc == 1)
     {
-      itoa (key,keyenv);
+      grub_snprintf (keyenv, 20, "%d", key);
       grub_env_set (args[0], keyenv);
     }
   return GRUB_ERR_NONE;
@@ -68,11 +48,11 @@ static grub_command_t cmd;
 GRUB_MOD_INIT(getkey)
 {
   cmd = grub_register_command ("getkey", grub_cmd_getkey,
-			       N_("[var]"),
+			       N_("[VARNAME]"),
 			       N_("Return the value of the pressed key. "));
 }
 
-GRUB_MOD_FINI(crc32)
+GRUB_MOD_FINI(getkey)
 {
   grub_unregister_command (cmd);
 }

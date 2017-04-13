@@ -677,6 +677,7 @@ grub_lua_file_crc32 (lua_State *state)
   grub_file_t file;
   const char *name;
   int crc;
+  char crcstr[10];
   char buf[GRUB_DISK_SECTOR_SIZE];
   grub_ssize_t size;
   name = luaL_checkstring (state, 1);
@@ -686,7 +687,8 @@ grub_lua_file_crc32 (lua_State *state)
       crc = 0;
       while ((size = grub_file_read (file, buf, sizeof (buf))) > 0)
         crc = grub_getcrc32c (crc, buf, size);
-      lua_pushinteger (state, crc);
+      grub_snprintf (crcstr, 10, "%08x", crc);
+      lua_pushstring (state, crcstr);
     }
   return 1;
 }
