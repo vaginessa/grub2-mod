@@ -1431,11 +1431,6 @@ module = {
 };
 
 module = {
-  name = fb;
-  common = fs/fb.c;
-};
-
-module = {
   name = fshelp;
   common = fs/fshelp.c;
 };
