@@ -32,6 +32,7 @@ static const struct grub_arg_option options[] = {
   {"skip", 's', 0, N_("Skip offset bytes from the beginning of file."), 0,
    ARG_TYPE_INT},
   {"length", 'n', 0, N_("Read only LENGTH bytes."), 0, ARG_TYPE_INT},
+  {"quiet", 'q', 0, N_("Don't print error."), 0, 0},
   {0, 0, 0, 0, 0, 0}
 };
 
@@ -92,8 +93,8 @@ grub_cmd_hexdump (grub_extcmd_context_t ctxt, int argc, char **args)
 
           if (grub_disk_read (disk, sector, ofs, len, buf))
             break;
-
-          hexdump (skip, buf, len);
+          if (! state[2].set)
+            hexdump (skip, buf, len);
 
           ofs = 0;
           skip += len;
@@ -118,7 +119,8 @@ grub_cmd_hexdump (grub_extcmd_context_t ctxt, int argc, char **args)
 	  unsigned long len;
 
 	  len = ((length) && (size > length)) ? length : size;
-	  hexdump (skip, buf, len);
+	  if (! state[2].set)
+	    hexdump (skip, buf, len);
 	  
 	  if (var_name)
 	    {
