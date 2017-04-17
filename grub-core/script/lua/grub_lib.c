@@ -31,6 +31,7 @@
 #include <grub/menu.h>
 #include <grub/device.h>
 #include <grub/lib/crc.h>
+#include <grub/lib/hexdump.h>
 
 #ifdef ENABLE_LUA_PCI
 #include <grub/pci.h>
@@ -693,6 +694,53 @@ grub_lua_file_crc32 (lua_State *state)
   return 1;
 }
 
+//file, skip, length
+static int
+grub_lua_hexdump (lua_State *state)
+{
+  grub_file_t file;
+  char buf[GRUB_DISK_SECTOR_SIZE * 4];
+  grub_ssize_t size, length;
+  grub_disk_addr_t skip;
+  grub_size_t var_len;
+  char *var_buf = NULL;
+  char *p = NULL;
+
+  luaL_checktype (state, 1, LUA_TLIGHTUSERDATA);
+  file = lua_touserdata (state, 1);
+  skip = luaL_checkinteger (state, 2);
+  length = luaL_checkinteger (state, 3);
+
+  var_len = length + 1;
+  var_buf = (char *) grub_malloc (var_len);
+  if (var_buf)
+    p = var_buf;
+  if (file)
+    {
+      file->offset = skip;
+      while ((size = grub_file_read (file, buf, sizeof (buf))) > 0)
+	{
+	  unsigned long len;
+	  len = ((length) && (size > length)) ? length : size;
+          grub_memcpy (p, buf, len);
+          p += len;
+	  skip += len;
+	  if (length)
+	    {
+	      length -= len;
+	      if (!length)
+		break;
+	    }
+	}
+      grub_size_t i;
+      *p = 0;
+      for (i = 0; i < var_len - 1; i++)
+        var_buf[i] = ((var_buf[i] >= 32) && (var_buf[i] < 127)) ? var_buf[i] : '.';
+      lua_pushstring (state, var_buf);
+    }
+  return 1;
+}
+
 static int
 grub_lua_add_menu (lua_State *state)
 {
@@ -926,6 +974,7 @@ luaL_Reg grub_lua_lib[] =
     {"file_eof", grub_lua_file_eof},
     {"file_exist", grub_lua_file_exist},
     {"file_crc32", grub_lua_file_crc32},
+    {"hexdump", grub_lua_hexdump},
     {"add_menu", grub_lua_add_menu},
     {"read_byte", grub_lua_read_byte},
     {"read_word", grub_lua_read_word},
