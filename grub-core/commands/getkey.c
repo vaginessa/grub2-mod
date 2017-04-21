@@ -20,20 +20,29 @@
 #include <grub/misc.h>
 #include <grub/term.h>
 #include <grub/env.h>
-#include <grub/command.h>
+#include <grub/extcmd.h>
 #include <grub/i18n.h>
 
 GRUB_MOD_LICENSE ("GPLv3+");
 
+static const struct grub_arg_option options[] =
+  {
+    {0, 'n', 0, N_("grub_getkey_noblock"), 0, 0},
+    {0, 0, 0, 0, 0, 0}
+  };
+
 static grub_err_t
-grub_cmd_getkey (grub_command_t cmd __attribute__ ((unused)),
-	      int argc, char **args)
+grub_cmd_getkey (grub_extcmd_context_t ctxt, int argc, char **args)
 
 {
-
+  struct grub_arg_list *state = ctxt->state;
   int key;
   char keyenv[20];
-  key = grub_getkey ();
+  if (state[0].set)
+    key = grub_getkey_noblock ();
+  else
+    key = grub_getkey ();
+
   grub_printf ("%d\n", key);
   if (argc == 1)
     {
@@ -43,16 +52,19 @@ grub_cmd_getkey (grub_command_t cmd __attribute__ ((unused)),
   return GRUB_ERR_NONE;
 }
 
-static grub_command_t cmd;
+static grub_extcmd_t cmd;
 
 GRUB_MOD_INIT(getkey)
 {
-  cmd = grub_register_command ("getkey", grub_cmd_getkey,
-			       N_("[VARNAME]"),
-			       N_("Return the value of the pressed key. "));
+  cmd = grub_register_extcmd ("getkey", grub_cmd_getkey,
+			      GRUB_COMMAND_ACCEPT_DASH
+			      | GRUB_COMMAND_OPTIONS_AT_START,
+			       N_("[-n] [VARNAME]"),
+			       N_("Return the value of the pressed key. "),
+			       options);
 }
 
 GRUB_MOD_FINI(getkey)
 {
-  grub_unregister_command (cmd);
+  grub_unregister_extcmd (cmd);
 }
