@@ -43,7 +43,7 @@ grub_cmd_getkey (grub_extcmd_context_t ctxt, int argc, char **args)
   else
     key = grub_getkey ();
 
-  grub_printf ("%d\n", key);
+  grub_printf ("0x%08x\n", key);
   if (argc == 1)
     {
       grub_snprintf (keyenv, 20, "%d", key);
