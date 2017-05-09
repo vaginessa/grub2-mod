@@ -1,6 +1,7 @@
+/* ehci.c - EHCI Support.  */
 /*
  *  GRUB  --  GRand Unified Bootloader
- *  Copyright (C) 2007,2008,2009  Free Software Foundation, Inc.
+ *  Copyright (C) 2011  Free Software Foundation, Inc.
  *
  *  GRUB is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,23 +17,29 @@
  *  along with GRUB.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef GRUB_AT_KEYBOARD_HEADER
-#define GRUB_AT_KEYBOARD_HEADER	1
+#include <grub/misc.h>
+#include <grub/mm.h>
+#include <grub/time.h>
+#include <grub/usb.h>
+#include <grub/fdtbus.h>
 
-/* Used for sending commands to the controller.  */
-#define KEYBOARD_COMMAND_ISREADY(x)	!((x) & 0x02)
-#define KEYBOARD_COMMAND_READ		0x20
-#define KEYBOARD_COMMAND_WRITE		0x60
-#define KEYBOARD_COMMAND_REBOOT		0xfe
+static grub_err_t
+ehci_attach(const struct grub_fdtbus_dev *dev)
+{
+  grub_dprintf ("ehci", "Found generic-ehci\n");
 
-#define KEYBOARD_AT_TRANSLATE		0x40
+  grub_ehci_init_device (grub_fdtbus_map_reg (dev, 0, 0));
+  return 0;
+}
 
-#define KEYBOARD_ISMAKE(x)	!((x) & 0x80)
-#define KEYBOARD_ISREADY(x)	((x) & 0x01)
-#define KEYBOARD_SCANCODE(x)	((x) & 0x7f)
+struct grub_fdtbus_driver ehci =
+{
+  .compatible = "generic-ehci",
+  .attach = ehci_attach
+};
 
-extern void grub_at_keyboard_init (void);
-extern void grub_at_keyboard_fini (void);
-int grub_at_keyboard_is_alive (void);
-
-#endif
+void
+grub_ehci_pci_scan (void)
+{
+  grub_fdtbus_register (&ehci);
+}
