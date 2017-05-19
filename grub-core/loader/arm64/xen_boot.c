@@ -156,7 +156,7 @@ prepare_xen_module_params (struct xen_boot_binary *module, void *xen_boot_fdt)
       grub_fdt_add_subnode (xen_boot_fdt, chosen_node, module_name);
 
   retval = grub_fdt_set_prop (xen_boot_fdt, module_node, "compatible",
-			      MODULE_CUSTOM_COMPATIBLE, sizeof(MODULE_CUSTOM_COMPATIBLE) - 1);
+			      MODULE_CUSTOM_COMPATIBLE, sizeof(MODULE_CUSTOM_COMPATIBLE));
   if (retval)
     return grub_error (GRUB_ERR_IO, "failed to update FDT");
 
@@ -379,6 +379,20 @@ grub_cmd_xen_module (grub_command_t cmd __attribute__((unused)),
 
   struct xen_boot_binary *module = NULL;
   grub_file_t file = 0;
+  int nounzip = 0;
+
+  if (!argc)
+    {
+      grub_error (GRUB_ERR_BAD_ARGUMENT, N_("filename expected"));
+      goto fail;
+    }
+
+  if (grub_strcmp (argv[0], "--nounzip") == 0)
+    {
+      argv++;
+      argc--;
+      nounzip = 1;
+    }
 
   if (!argc)
     {
@@ -403,6 +417,8 @@ grub_cmd_xen_module (grub_command_t cmd __attribute__((unused)),
 
   grub_dprintf ("xen_loader", "Init module and node info\n");
 
+  if (nounzip)
+    grub_file_filter_disable_compression ();
   file = grub_file_open (argv[0]);
   if (!file)
     goto fail;
