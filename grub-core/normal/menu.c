@@ -1,7 +1,7 @@
 /* menu.c - General supporting functionality for menus.  */
 /*
  *  GRUB  --  GRand Unified Bootloader
- *  Copyright (C) 2003,2004,2005,2006,2007,2008,2009,2010  Free Software Foundation, Inc.
+ *  Copyright (C) 2003,2004,2005,2006,2007,2008,2009,2010,2017  Free Software Foundation, Inc.
  *
  *  GRUB is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -33,6 +33,7 @@
 #include <grub/gfxterm.h>
 #include <grub/dl.h>
 #include <grub/engine_sound.h>
+#include <grub/speaker.h>
 
 /* Time to delay after displaying an error message about a default/fallback
    entry failing to boot.  */
@@ -451,6 +452,8 @@ menu_refresh_sound_player (int is_selected, int cur_sound)
 static void
 player_fini (void)
 {
+  /* Random operation or timeout, beep off.  */
+  grub_speaker_beep_off ();
   struct engine_sound_player *cur, *next;
   for (cur = players; cur; cur = next)
     {
@@ -827,7 +830,8 @@ run_menu (grub_menu_t menu, int nested, int *auto_boot)
 	  grub_env_unset ("timeout");
 	  *auto_boot = 1;
 	  menu_fini ();
-	  player_fini ();
+	  if (sound_open)
+	    player_fini ();
 	  return default_entry;
 	}
 
@@ -938,7 +942,8 @@ run_menu (grub_menu_t menu, int nested, int *auto_boot)
 	    //case GRUB_TERM_KEY_RIGHT:
 	    case GRUB_TERM_CTRL | 'f':
 	      menu_fini ();
-	      player_fini ();
+	      if (sound_open)
+	        player_fini ();
               *auto_boot = 0;
 	      return current_entry;
 
@@ -946,20 +951,23 @@ run_menu (grub_menu_t menu, int nested, int *auto_boot)
 	      if (nested)
 		{
 		  menu_fini ();
-		  player_fini ();
+		  if (sound_open)
+		    player_fini ();
 		  return -1;
 		}
 	      break;
 
 	    case 'c':
 	      menu_fini ();
-	      player_fini ();
-	      grub_cmdline_run (1);
+	      if (sound_open)
+	        player_fini ();
+	      grub_cmdline_run (1, 0);
 	      goto refresh;
 
 	    case 'e':
 	      menu_fini ();
-	      player_fini ();
+	      if (sound_open)
+	        player_fini ();
 		{
 		  grub_menu_entry_t e = grub_menu_get_entry (menu, current_entry);
 		  if (e)
@@ -975,7 +983,8 @@ run_menu (grub_menu_t menu, int nested, int *auto_boot)
 		if (entry >= 0)
 		  {
 		    menu_fini ();
-		    player_fini ();
+		    if (sound_open)
+		      player_fini ();
 		    *auto_boot = 0;
 		    return entry;
 		  }

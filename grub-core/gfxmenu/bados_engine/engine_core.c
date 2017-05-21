@@ -1,20 +1,20 @@
 /* engine_core.c - According to user settings, generate animation.  */
 /*
- *  BAD_OS - Bad OS need to use GRUB to boot and repair.
- *  Copyright 2015 Ruyi Boy - All Rights Reserved
+ *  GRUB  --  GRand Unified Bootloader
+ *  Copyright 2015,2017 Ruyi Boy - All Rights Reserved
  *
- *  BAD_OS is free software: you can redistribute it and/or modify
+ *  GRUB is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation, either version 3 of the License, or
  *  (at your option) any later version.
  *
- *  BAD_OS is distributed in the hope that it will be useful,
+ *  GRUB is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with BAD_OS.  If not, see <http://www.gnu.org/licenses/>.
+ *  along with GRUB.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include <grub/types.h>
@@ -1164,7 +1164,7 @@ animation_refresh_info (void *vself, grub_gfxmenu_view_t view)
     {
       if (self->bind_menu != FOLLOW_SINGLE)
 	{
-	  animation_clear_cache (vself);
+	  animation_clear_cache (self);
 	}
 
       self->is_selected = cur_selected;
@@ -1179,7 +1179,7 @@ animation_refresh_info (void *vself, grub_gfxmenu_view_t view)
 
       if (self->cur_index % EXPLOSION_PROOF == 0)
 	{
-	  animation_clear_cache (vself);
+	  animation_clear_cache (self);
 	}
 
       if (self->cur_index > self->pic_num)
@@ -1188,7 +1188,7 @@ animation_refresh_info (void *vself, grub_gfxmenu_view_t view)
 
 	  if (self->pic_num > EXPLOSION_PROOF)
 	    {
-	      animation_clear_cache (vself);
+	      animation_clear_cache (self);
 	    }
 	}
     }

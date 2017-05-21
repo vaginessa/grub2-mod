@@ -80,7 +80,9 @@ grub-mount
 /grub-ofpathname.exe
 grub-core/bin2h
 grub-core/build-grub-pe2elf.exe
-grub-core/g2*dr.mbr
+grub-core/g2*dr.*
+grub-core/grldr.*
+grub
 grub-core/grub-ntldr-img
 grub-core/grub_mbr.h
 grub-core/grubinst
