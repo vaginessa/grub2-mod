@@ -202,14 +202,12 @@ label_set_property (void *vself, const char *name, const char *value)
     {
       grub_free (self->text);
       grub_free (self->template);
-      if (! value)
-	{
-	  self->template = NULL;
-	  self->text = grub_strdup ("");
-	}
-      else
-	{
+      self->template = NULL;
+      self->text = grub_strdup ("");
+      if (value)
 	  value = grub_env_get (value);
+      if (value)
+        {
 	  self->template = grub_strdup (value);
 	  self->text = grub_xasprintf (value, self->value);
 	}
