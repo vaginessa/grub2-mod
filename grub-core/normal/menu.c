@@ -493,7 +493,7 @@ menu_fini (void)
 }
 
 static void
-menu_init (int entry, grub_menu_t menu, int nested)
+menu_init (int entry, grub_menu_t menu, int nested, int *egn_refresh)
 {
   struct grub_term_output *term;
   int gfxmenu = 0;
@@ -535,7 +535,10 @@ menu_init (int entry, grub_menu_t menu, int nested)
     grub_err_t err;
 
     if (grub_strcmp (term->name, "gfxterm") == 0 && gfxmenu)
-      continue;
+      {
+    	*egn_refresh = 1;
+    	continue;
+      }
 
     err = grub_menu_try_text (term, entry, menu, nested);
     if(!err)
@@ -686,7 +689,7 @@ run_menu (grub_menu_t menu, int nested, int *auto_boot)
 
   /* Mark the beginning of the engine.  */
   int animation_open = 0;
-  int need_refresh = 1;
+  int egn_refresh = 0;
   int sound_open = 0;
   int cur_sound = ENGINE_START_SOUND;
 
@@ -775,7 +778,7 @@ run_menu (grub_menu_t menu, int nested, int *auto_boot)
   current_entry = default_entry;
 
  refresh:
-  menu_init (current_entry, menu, nested);
+  menu_init (current_entry, menu, nested, &egn_refresh);
 
   /* Initialize the time.  */
   saved_time = grub_get_time_ms ();
@@ -790,9 +793,9 @@ run_menu (grub_menu_t menu, int nested, int *auto_boot)
   /* Initialize the animation engine.  */
   s1_time = grub_get_time_ms ();
 
-  if (!animation_open && frame_speed)
+  if (!animation_open && frame_speed && egn_refresh)
     {
-      menu_set_animation_state (need_refresh);
+      menu_set_animation_state (egn_refresh);
       animation_open = 1;
     }
 
@@ -841,7 +844,7 @@ run_menu (grub_menu_t menu, int nested, int *auto_boot)
       if (animation_open && (cur_time - s1_time >= frame_speed))
 	{
 	  s1_time = cur_time;
-	  menu_set_animation_state (need_refresh);
+	  menu_set_animation_state (egn_refresh);
 	}
 
       /* Refresh the sound.  */
