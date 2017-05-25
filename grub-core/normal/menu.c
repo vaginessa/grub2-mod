@@ -493,59 +493,60 @@ menu_fini (void)
 }
 
 static void
-menu_init (int entry, grub_menu_t menu, int nested, int *egn_refresh)
+menu_init (int entry, grub_menu_t menu, int nested, grub_uint64_t *frame_speed, int *egn_refresh)
 {
   struct grub_term_output *term;
   int gfxmenu = 0;
 
   FOR_ACTIVE_TERM_OUTPUTS(term)
-    if (term->fullscreen)
-      {
-	if (grub_env_get ("theme"))
+	if (term->fullscreen)
 	  {
-	    if (!grub_gfxmenu_try_hook)
-	      {
-		grub_dl_load ("gfxmenu");
-		grub_print_error ();
-	      }
-	    if (grub_gfxmenu_try_hook)
-	      {
-		grub_err_t err;
-		err = grub_gfxmenu_try_hook (entry, menu, nested);
-		if(!err)
+		if (grub_env_get ("theme"))
 		  {
-		    gfxmenu = 1;
-		    break;
+			if (!grub_gfxmenu_try_hook)
+			  {
+				grub_dl_load ("gfxmenu");
+				grub_print_error ();
+			  }
+			if (grub_gfxmenu_try_hook)
+			  {
+				grub_err_t err;
+				err = grub_gfxmenu_try_hook (entry, menu, nested);
+				if (!err)
+				  {
+					gfxmenu = 1;
+					break;
+				  }
+			  }
+			else
+			  grub_error (GRUB_ERR_BAD_MODULE, N_("module `%s' isn't loaded"), "gfxmenu");
+			grub_print_error ();
+			grub_wait_after_message ();
 		  }
-	      }
-	    else
-	      grub_error (GRUB_ERR_BAD_MODULE,
-			  N_("module `%s' isn't loaded"),
-			  "gfxmenu");
-	    grub_print_error ();
-	    grub_wait_after_message ();
+		grub_errno = GRUB_ERR_NONE;
+		term->fullscreen ();
+		break;
 	  }
-	grub_errno = GRUB_ERR_NONE;
-	term->fullscreen ();
-	break;
-      }
 
   FOR_ACTIVE_TERM_OUTPUTS(term)
-  {
-    grub_err_t err;
+	{
+	  grub_err_t err;
 
-    if (grub_strcmp (term->name, "gfxterm") == 0 && gfxmenu)
-      {
-    	*egn_refresh = 1;
-    	continue;
-      }
+	  if (grub_strcmp (term->name, "gfxterm") == 0 && gfxmenu)
+		{
+		  if (*frame_speed)
+			{
+			  *egn_refresh = 1;
+			}
+		  continue;
+		}
 
-    err = grub_menu_try_text (term, entry, menu, nested);
-    if(!err)
-      continue;
-    grub_print_error ();
-    grub_errno = GRUB_ERR_NONE;
-  }
+	  err = grub_menu_try_text (term, entry, menu, nested);
+	  if (!err)
+		continue;
+	  grub_print_error ();
+	  grub_errno = GRUB_ERR_NONE;
+	}
 }
 
 static void
@@ -778,7 +779,7 @@ run_menu (grub_menu_t menu, int nested, int *auto_boot)
   current_entry = default_entry;
 
  refresh:
-  menu_init (current_entry, menu, nested, &egn_refresh);
+  menu_init (current_entry, menu, nested, &frame_speed, &egn_refresh);
 
   /* Initialize the time.  */
   saved_time = grub_get_time_ms ();
@@ -793,7 +794,7 @@ run_menu (grub_menu_t menu, int nested, int *auto_boot)
   /* Initialize the animation engine.  */
   s1_time = grub_get_time_ms ();
 
-  if (!animation_open && frame_speed && egn_refresh)
+  if (!animation_open && egn_refresh)
     {
       menu_set_animation_state (egn_refresh);
       animation_open = 1;
