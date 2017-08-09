@@ -126,9 +126,13 @@ ensure_space (struct line *linep, int extra)
 static int
 get_logical_num_lines (struct line *linep, struct per_term_screen *term_screen)
 {
-  return (grub_getstringwidth (linep->buf, linep->buf + linep->len,
-			       term_screen->term)
-	  / (unsigned) term_screen->geo.entry_width) + 1;
+  grub_size_t width = grub_getstringwidth (linep->buf, linep->buf + linep->len,
+					   term_screen->term);
+
+  /* Empty line still consumes space on screen */
+  return width ? (width + (unsigned) term_screen->geo.entry_width - 1) /
+		 (unsigned) term_screen->geo.entry_width
+	       : 1;
 }
 
 static void
@@ -249,6 +253,8 @@ update_screen (struct screen *screen, struct per_term_screen *term_screen,
       down = 1;
       mode = ALL_LINES;
     }
+    
+  grub_term_setcursor (term_screen->term, 0);
 
   if (mode != NO_LINE)
     {
@@ -357,6 +363,7 @@ update_screen (struct screen *screen, struct per_term_screen *term_screen,
 
     }
 
+  grub_term_setcursor (term_screen->term, 1);
   grub_term_refresh (term_screen->term);
 }
 
@@ -472,7 +479,10 @@ insert_string (struct screen *screen, const char *s, int update)
 				    (grub_uint8_t *) s, (p - s), 0);
 
 	  if (! ensure_space (current_linep, size))
-	    return 0;
+	    {
+	      grub_free (unicode_msg);
+	      return 0;
+	    }
 
 	  grub_memmove (current_linep->buf + screen->column + size,
 			current_linep->buf + screen->column,
@@ -1261,6 +1271,7 @@ grub_menu_entry_run (grub_menu_entry_t entry)
       if (! screen->lines[i].pos)
 	{
 	  grub_print_error ();
+	  destroy_screen (screen);
 	  grub_errno = GRUB_ERR_NONE;
 	  return;
 	}
@@ -1270,6 +1281,7 @@ grub_menu_entry_run (grub_menu_entry_t entry)
   if (!screen->terms)
     {
       grub_print_error ();
+      destroy_screen (screen);
       grub_errno = GRUB_ERR_NONE;
       return;
     }
@@ -1396,7 +1408,7 @@ grub_menu_entry_run (grub_menu_entry_t entry)
 
 	case GRUB_TERM_CTRL | 'c':
 	case GRUB_TERM_KEY_F2:
-	  grub_cmdline_run (1);
+	  grub_cmdline_run (1, 0);
 	  goto refresh;
 
 	case GRUB_TERM_CTRL | 'x':

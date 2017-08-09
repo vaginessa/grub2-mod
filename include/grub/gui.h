@@ -1,7 +1,7 @@
 /* gui.h - GUI components header file. */
 /*
  *  GRUB  --  GRand Unified Bootloader
- *  Copyright (C) 2008,2009  Free Software Foundation, Inc.
+ *  Copyright (C) 2008,2009,2017  Free Software Foundation, Inc.
  *
  *  GRUB is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -36,7 +36,8 @@ typedef struct grub_gui_container *grub_gui_container_t;
 typedef struct grub_gui_list *grub_gui_list_t;
 typedef struct grub_engine_animation *engine_animation_t;
 
-typedef void (*grub_gui_component_callback) (grub_gui_component_t component, void *userdata);
+typedef void (*grub_gui_component_callback) (grub_gui_component_t component,
+                                             void *userdata);
 
 /* Component interface.  */
 
@@ -59,7 +60,8 @@ struct grub_gui_container_ops
 {
   void (*add) (void *self, grub_gui_component_t comp);
   void (*remove) (void *self, grub_gui_component_t comp);
-  void (*iterate_children) (void *self, grub_gui_component_callback cb, void *userdata);
+  void (*iterate_children) (void *self,
+                            grub_gui_component_callback cb, void *userdata);
 };
 
 struct grub_gui_list_ops
@@ -205,7 +207,6 @@ struct grub_engine_animation
   struct grub_gui_component component;
   void (*refresh_animation) (void *self, grub_gfxmenu_view_t view);
 };
-
 
 /* Interfaces to concrete component classes.  */
 

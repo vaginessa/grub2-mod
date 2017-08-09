@@ -1,7 +1,7 @@
 /* menu.c - General supporting functionality for menus.  */
 /*
  *  GRUB  --  GRand Unified Bootloader
- *  Copyright (C) 2003,2004,2005,2006,2007,2008,2009,2010  Free Software Foundation, Inc.
+ *  Copyright (C) 2003,2004,2005,2006,2007,2008,2009,2010,2017  Free Software Foundation, Inc.
  *
  *  GRUB is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -33,6 +33,7 @@
 #include <grub/gfxterm.h>
 #include <grub/dl.h>
 #include <grub/engine_sound.h>
+#include <grub/speaker.h>
 
 /* Time to delay after displaying an error message about a default/fallback
    entry failing to boot.  */
@@ -451,6 +452,8 @@ menu_refresh_sound_player (int is_selected, int cur_sound)
 static void
 player_fini (void)
 {
+  /* Random operation or timeout, beep off.  */
+  grub_speaker_beep_off ();
   struct engine_sound_player *cur, *next;
   for (cur = players; cur; cur = next)
     {
@@ -490,56 +493,60 @@ menu_fini (void)
 }
 
 static void
-menu_init (int entry, grub_menu_t menu, int nested)
+menu_init (int entry, grub_menu_t menu, int nested, grub_uint64_t *frame_speed, int *egn_refresh)
 {
   struct grub_term_output *term;
   int gfxmenu = 0;
 
   FOR_ACTIVE_TERM_OUTPUTS(term)
-    if (term->fullscreen)
-      {
-	if (grub_env_get ("theme"))
+	if (term->fullscreen)
 	  {
-	    if (!grub_gfxmenu_try_hook)
-	      {
-		grub_dl_load ("gfxmenu");
-		grub_print_error ();
-	      }
-	    if (grub_gfxmenu_try_hook)
-	      {
-		grub_err_t err;
-		err = grub_gfxmenu_try_hook (entry, menu, nested);
-		if(!err)
+		if (grub_env_get ("theme"))
 		  {
-		    gfxmenu = 1;
-		    break;
+			if (!grub_gfxmenu_try_hook)
+			  {
+				grub_dl_load ("gfxmenu");
+				grub_print_error ();
+			  }
+			if (grub_gfxmenu_try_hook)
+			  {
+				grub_err_t err;
+				err = grub_gfxmenu_try_hook (entry, menu, nested);
+				if (!err)
+				  {
+					gfxmenu = 1;
+					break;
+				  }
+			  }
+			else
+			  grub_error (GRUB_ERR_BAD_MODULE, N_("module `%s' isn't loaded"), "gfxmenu");
+			grub_print_error ();
+			grub_wait_after_message ();
 		  }
-	      }
-	    else
-	      grub_error (GRUB_ERR_BAD_MODULE,
-			  N_("module `%s' isn't loaded"),
-			  "gfxmenu");
-	    grub_print_error ();
-	    grub_wait_after_message ();
+		grub_errno = GRUB_ERR_NONE;
+		term->fullscreen ();
+		break;
 	  }
-	grub_errno = GRUB_ERR_NONE;
-	term->fullscreen ();
-	break;
-      }
 
   FOR_ACTIVE_TERM_OUTPUTS(term)
-  {
-    grub_err_t err;
+	{
+	  grub_err_t err;
 
-    if (grub_strcmp (term->name, "gfxterm") == 0 && gfxmenu)
-      continue;
+	  if (grub_strcmp (term->name, "gfxterm") == 0 && gfxmenu)
+		{
+		  if (*frame_speed)
+			{
+			  *egn_refresh = 1;
+			}
+		  continue;
+		}
 
-    err = grub_menu_try_text (term, entry, menu, nested);
-    if(!err)
-      continue;
-    grub_print_error ();
-    grub_errno = GRUB_ERR_NONE;
-  }
+	  err = grub_menu_try_text (term, entry, menu, nested);
+	  if (!err)
+		continue;
+	  grub_print_error ();
+	  grub_errno = GRUB_ERR_NONE;
+	}
 }
 
 static void
@@ -683,7 +690,7 @@ run_menu (grub_menu_t menu, int nested, int *auto_boot)
 
   /* Mark the beginning of the engine.  */
   int animation_open = 0;
-  int need_refresh = 1;
+  int egn_refresh = 0;
   int sound_open = 0;
   int cur_sound = ENGINE_START_SOUND;
 
@@ -772,7 +779,7 @@ run_menu (grub_menu_t menu, int nested, int *auto_boot)
   current_entry = default_entry;
 
  refresh:
-  menu_init (current_entry, menu, nested);
+  menu_init (current_entry, menu, nested, &frame_speed, &egn_refresh);
 
   /* Initialize the time.  */
   saved_time = grub_get_time_ms ();
@@ -787,9 +794,9 @@ run_menu (grub_menu_t menu, int nested, int *auto_boot)
   /* Initialize the animation engine.  */
   s1_time = grub_get_time_ms ();
 
-  if (!animation_open && frame_speed)
+  if (!animation_open && egn_refresh)
     {
-      menu_set_animation_state (need_refresh);
+      menu_set_animation_state (egn_refresh);
       animation_open = 1;
     }
 
@@ -827,7 +834,8 @@ run_menu (grub_menu_t menu, int nested, int *auto_boot)
 	  grub_env_unset ("timeout");
 	  *auto_boot = 1;
 	  menu_fini ();
-	  player_fini ();
+	  if (sound_open)
+	    player_fini ();
 	  return default_entry;
 	}
 
@@ -837,7 +845,7 @@ run_menu (grub_menu_t menu, int nested, int *auto_boot)
       if (animation_open && (cur_time - s1_time >= frame_speed))
 	{
 	  s1_time = cur_time;
-	  menu_set_animation_state (need_refresh);
+	  menu_set_animation_state (egn_refresh);
 	}
 
       /* Refresh the sound.  */
@@ -938,7 +946,8 @@ run_menu (grub_menu_t menu, int nested, int *auto_boot)
 	    //case GRUB_TERM_KEY_RIGHT:
 	    case GRUB_TERM_CTRL | 'f':
 	      menu_fini ();
-	      player_fini ();
+	      if (sound_open)
+	        player_fini ();
               *auto_boot = 0;
 	      return current_entry;
 
@@ -946,20 +955,23 @@ run_menu (grub_menu_t menu, int nested, int *auto_boot)
 	      if (nested)
 		{
 		  menu_fini ();
-		  player_fini ();
+		  if (sound_open)
+		    player_fini ();
 		  return -1;
 		}
 	      break;
 
 	    case 'c':
 	      menu_fini ();
-	      player_fini ();
-	      grub_cmdline_run (1);
+	      if (sound_open)
+	        player_fini ();
+	      grub_cmdline_run (1, 0);
 	      goto refresh;
 
 	    case 'e':
 	      menu_fini ();
-	      player_fini ();
+	      if (sound_open)
+	        player_fini ();
 		{
 		  grub_menu_entry_t e = grub_menu_get_entry (menu, current_entry);
 		  if (e)
@@ -975,7 +987,8 @@ run_menu (grub_menu_t menu, int nested, int *auto_boot)
 		if (entry >= 0)
 		  {
 		    menu_fini ();
-		    player_fini ();
+		    if (sound_open)
+		      player_fini ();
 		    *auto_boot = 0;
 		    return entry;
 		  }

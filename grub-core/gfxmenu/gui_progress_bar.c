@@ -1,7 +1,7 @@
 /* gui_progress_bar.c - GUI progress bar component.  */
 /*
  *  GRUB  --  GRand Unified Bootloader
- *  Copyright (C) 2008,2009  Free Software Foundation, Inc.
+ *  Copyright (C) 2008,2009,2017  Free Software Foundation, Inc.
  *
  *  GRUB is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -118,9 +118,15 @@ draw_filled_rect_bar (grub_gui_progress_bar_t self)
                         f.width + 2, f.height + 2);
 
   /* Bar background.  */
-  int barwidth = (f.width
-                  * (self->value - self->start)
-                  / (self->end - self->start));
+  unsigned barwidth;
+
+  if (self->end <= self->start
+      || self->value <= self->start)
+    barwidth = 0;
+  else
+    barwidth = (f.width
+		* (self->value - self->start)
+		/ (self->end - self->start));
   grub_video_fill_rect (grub_video_map_rgba_color (self->bg_color),
                         f.x + barwidth, f.y,
                         f.width - barwidth, f.height);

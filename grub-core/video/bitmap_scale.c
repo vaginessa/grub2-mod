@@ -1,9 +1,7 @@
 /* bitmap_scale.c - Bitmap scaling. */
-/*  2015-8-26 Modified by Ruyi Boy
- *  The original verification methods have been moved to "bitmap.h".
- *
+/*
  *  GRUB  --  GRand Unified Bootloader
- *  Copyright (C) 2006,2007,2008,2009  Free Software Foundation, Inc.
+ *  Copyright (C) 2006,2007,2008,2009,2017  Free Software Foundation, Inc.
  *
  *  GRUB is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -27,18 +25,18 @@
 #include <grub/types.h>
 #include <grub/dl.h>
 
-GRUB_MOD_LICENSE("GPLv3+");
+GRUB_MOD_LICENSE ("GPLv3+");
 
 /* Prototypes for module-local functions.  */
-static grub_err_t
-scale_nn (struct grub_video_bitmap *dst, struct grub_video_bitmap *src);
-static grub_err_t
-scale_bilinear (struct grub_video_bitmap *dst, struct grub_video_bitmap *src);
+static grub_err_t scale_nn (struct grub_video_bitmap *dst,
+                            struct grub_video_bitmap *src);
+static grub_err_t scale_bilinear (struct grub_video_bitmap *dst,
+                                  struct grub_video_bitmap *src);
 
 static grub_err_t
 grub_video_bitmap_scale (struct grub_video_bitmap *dst,
-			 struct grub_video_bitmap *src,
-			 enum grub_video_bitmap_scale_method scale_method)
+                         struct grub_video_bitmap *src,
+                         enum grub_video_bitmap_scale_method scale_method)
 {
   switch (scale_method)
     {
@@ -54,36 +52,37 @@ grub_video_bitmap_scale (struct grub_video_bitmap *dst,
 }
 
 /* This function creates a new scaled version of the bitmap SRC.  The new
- bitmap has dimensions DST_WIDTH by DST_HEIGHT.  The scaling algorithm
- is given by SCALE_METHOD.  If an error is encountered, the return code is
- not equal to GRUB_ERR_NONE, and the bitmap DST is either not created, or
- it is destroyed before this function returns.
+   bitmap has dimensions DST_WIDTH by DST_HEIGHT.  The scaling algorithm
+   is given by SCALE_METHOD.  If an error is encountered, the return code is
+   not equal to GRUB_ERR_NONE, and the bitmap DST is either not created, or
+   it is destroyed before this function returns.
 
- Supports only direct color modes which have components separated
- into bytes (e.g., RGBA 8:8:8:8 or BGR 8:8:8 true color).
- But because of this simplifying assumption, the implementation is
- greatly simplified.  */
+   Supports only direct color modes which have components separated
+   into bytes (e.g., RGBA 8:8:8:8 or BGR 8:8:8 true color).
+   But because of this simplifying assumption, the implementation is
+   greatly simplified.  */
 grub_err_t
-grub_video_bitmap_create_scaled (
-    struct grub_video_bitmap **dst, int dst_width, int dst_height,
-    struct grub_video_bitmap *src,
-    enum grub_video_bitmap_scale_method scale_method)
+grub_video_bitmap_create_scaled (struct grub_video_bitmap **dst,
+                                 int dst_width, int dst_height,
+                                 struct grub_video_bitmap *src,
+                                 enum grub_video_bitmap_scale_method
+                                 scale_method)
 {
   *dst = 0;
 
-  grub_err_t err = verify_source_bitmap (src);
+  grub_err_t err = verify_source_bitmap(src);
   if (err != GRUB_ERR_NONE)
     return err;
   if (dst_width <= 0 || dst_height <= 0)
     return grub_error (GRUB_ERR_BUG,
-		       "requested to scale to a size w/ a zero dimension");
+                       "requested to scale to a size w/ a zero dimension");
 
   /* Create the new bitmap. */
   grub_err_t ret;
   ret = grub_video_bitmap_create (dst, dst_width, dst_height,
-				  src->mode_info.blit_format);
+                                  src->mode_info.blit_format);
   if (ret != GRUB_ERR_NONE)
-    return ret; /* Error. */
+    return ret;                 /* Error. */
 
   ret = grub_video_bitmap_scale (*dst, src, scale_method);
 
@@ -103,7 +102,7 @@ grub_video_bitmap_create_scaled (
 
 static grub_err_t
 make_h_align (unsigned *x, unsigned *w, unsigned new_w,
-	      grub_video_bitmap_h_align_t h_align)
+              grub_video_bitmap_h_align_t h_align)
 {
   grub_err_t ret = GRUB_ERR_NONE;
   if (new_w >= *w)
@@ -133,7 +132,7 @@ make_h_align (unsigned *x, unsigned *w, unsigned new_w,
 
 static grub_err_t
 make_v_align (unsigned *y, unsigned *h, unsigned new_h,
-	      grub_video_bitmap_v_align_t v_align)
+              grub_video_bitmap_v_align_t v_align)
 {
   grub_err_t ret = GRUB_ERR_NONE;
   if (new_h >= *h)
@@ -162,25 +161,28 @@ make_v_align (unsigned *y, unsigned *h, unsigned new_h,
 }
 
 grub_err_t
-grub_video_bitmap_scale_proportional (
-    struct grub_video_bitmap **dst, int dst_width, int dst_height,
-    struct grub_video_bitmap *src,
-    enum grub_video_bitmap_scale_method scale_method,
-    grub_video_bitmap_selection_method_t selection_method,
-    grub_video_bitmap_v_align_t v_align, grub_video_bitmap_h_align_t h_align)
+grub_video_bitmap_scale_proportional (struct grub_video_bitmap **dst,
+                                      int dst_width, int dst_height,
+                                      struct grub_video_bitmap *src,
+                                      enum grub_video_bitmap_scale_method
+                                      scale_method,
+                                      grub_video_bitmap_selection_method_t
+                                      selection_method,
+                                      grub_video_bitmap_v_align_t v_align,
+                                      grub_video_bitmap_h_align_t h_align)
 {
   *dst = 0;
-  grub_err_t ret = verify_source_bitmap (src);
+  grub_err_t ret = verify_source_bitmap(src);
   if (ret != GRUB_ERR_NONE)
     return ret;
   if (dst_width <= 0 || dst_height <= 0)
     return grub_error (GRUB_ERR_BUG,
-		       "requested to scale to a size w/ a zero dimension");
+                       "requested to scale to a size w/ a zero dimension");
 
   ret = grub_video_bitmap_create (dst, dst_width, dst_height,
-				  src->mode_info.blit_format);
+                                  src->mode_info.blit_format);
   if (ret != GRUB_ERR_NONE)
-    return ret; /* Error. */
+    return ret;                 /* Error. */
 
   unsigned dx0 = 0;
   unsigned dy0 = 0;
@@ -196,27 +198,27 @@ grub_video_bitmap_scale_proportional (
     case GRUB_VIDEO_BITMAP_SELECTION_METHOD_CROP:
       /* Comparing sw/sh VS dw/dh. */
       if (sw * dh < dw * sh)
-	ret = make_v_align (&sy0, &sh, sw * dh / dw, v_align);
+        ret = make_v_align (&sy0, &sh, sw * dh / dw, v_align);
       else
-	ret = make_h_align (&sx0, &sw, sh * dw / dh, h_align);
+        ret = make_h_align (&sx0, &sw, sh * dw / dh, h_align);
       break;
     case GRUB_VIDEO_BITMAP_SELECTION_METHOD_PADDING:
       if (sw * dh < dw * sh)
-	ret = make_h_align (&dx0, &dw, sw * dh / sh, h_align);
+        ret = make_h_align (&dx0, &dw, sw * dh / sh, h_align);
       else
-	ret = make_v_align (&dy0, &dh, sh * dw / sw, v_align);
+        ret = make_v_align (&dy0, &dh, sh * dw / sw, v_align);
       break;
     case GRUB_VIDEO_BITMAP_SELECTION_METHOD_FITWIDTH:
       if (sw * dh < dw * sh)
-	ret = make_v_align (&sy0, &sh, sw * dh / dw, v_align);
+        ret = make_v_align (&sy0, &sh, sw * dh / dw, v_align);
       else
-	ret = make_v_align (&dy0, &dh, sh * dw / sw, v_align);
+        ret = make_v_align (&dy0, &dh, sh * dw / sw, v_align);
       break;
     case GRUB_VIDEO_BITMAP_SELECTION_METHOD_FITHEIGHT:
       if (sw * dh < dw * sh)
-	ret = make_h_align (&dx0, &dw, sw * dh / sh, h_align);
+        ret = make_h_align (&dx0, &dw, sw * dh / sh, h_align);
       else
-	ret = make_h_align (&sx0, &sw, sh * dw / dh, h_align);
+        ret = make_h_align (&sx0, &sw, sh * dw / dh, h_align);
       break;
     default:
       ret = grub_error (GRUB_ERR_BUG, "Invalid selection_method value");
@@ -242,11 +244,11 @@ grub_video_bitmap_scale_proportional (
       src->mode_info.width = sw;
       src->mode_info.height = sh;
       src->data = (grub_uint8_t *) src->data + sx0 * bytes_per_pixel
-	  + sy0 * sstride;
+                  + sy0 * sstride;
       (*dst)->mode_info.width = dw;
       (*dst)->mode_info.height = dh;
       (*dst)->data = (grub_uint8_t *) (*dst)->data + dx0 * bytes_per_pixel
-	  + dy0 * dstride;
+                     + dy0 * dstride;
 
       /* Scale our image. */
       ret = grub_video_bitmap_scale (*dst, src, scale_method);
@@ -276,75 +278,18 @@ grub_video_bitmap_scale_proportional (
 
 /* Nearest neighbor bitmap scaling algorithm.
 
- Copy the bitmap SRC to the bitmap DST, scaling the bitmap to fit the
- dimensions of DST.  This function uses the nearest neighbor algorithm to
- interpolate the pixels.
+   Copy the bitmap SRC to the bitmap DST, scaling the bitmap to fit the
+   dimensions of DST.  This function uses the nearest neighbor algorithm to
+   interpolate the pixels.
 
- Supports only direct color modes which have components separated
- into bytes (e.g., RGBA 8:8:8:8 or BGR 8:8:8 true color).
- But because of this simplifying assumption, the implementation is
- greatly simplified.  */
+   Supports only direct color modes which have components separated
+   into bytes (e.g., RGBA 8:8:8:8 or BGR 8:8:8 true color).
+   But because of this simplifying assumption, the implementation is
+   greatly simplified.  */
 static grub_err_t
 scale_nn (struct grub_video_bitmap *dst, struct grub_video_bitmap *src)
 {
-  grub_err_t err = verify_bitmaps (dst, src);
-  if (err != GRUB_ERR_NONE)
-    return err;
-
-  grub_uint8_t *ddata = dst->data;
-  grub_uint8_t *sdata = src->data;
-  unsigned dw = dst->mode_info.width;
-  unsigned dh = dst->mode_info.height;
-  unsigned sw = src->mode_info.width;
-  unsigned sh = src->mode_info.height;
-  unsigned dstride = dst->mode_info.pitch;
-  unsigned sstride = src->mode_info.pitch;
-  /* bytes_per_pixel is the same for both src and dst. */
-  unsigned bytes_per_pixel = dst->mode_info.bytes_per_pixel;
-
-  unsigned dy;
-  for (dy = 0; dy < dh; dy++)
-    {
-      unsigned dx;
-      for (dx = 0; dx < dw; dx++)
-	{
-	  grub_uint8_t *dptr;
-	  grub_uint8_t *sptr;
-	  unsigned sx;
-	  unsigned sy;
-	  unsigned comp;
-
-	  /* Compute the source coordinate that the destination coordinate
-	   maps to.  Note: sx/sw = dx/dw  =>  sx = sw*dx/dw. */
-	  sx = sw * dx / dw;
-	  sy = sh * dy / dh;
-
-	  /* Get the address of the pixels in src and dst. */
-	  dptr = ddata + dy * dstride + dx * bytes_per_pixel;
-	  sptr = sdata + sy * sstride + sx * bytes_per_pixel;
-
-	  /* Copy the pixel color value. */
-	  for (comp = 0; comp < bytes_per_pixel; comp++)
-	    dptr[comp] = sptr[comp];
-	}
-    }
-  return GRUB_ERR_NONE;
-}
-
-/* Bilinear interpolation image scaling algorithm.
-
- Copy the bitmap SRC to the bitmap DST, scaling the bitmap to fit the
- dimensions of DST.  This function uses the bilinear interpolation algorithm
- to interpolate the pixels.
-
- Supports only direct color modes which have components separated
- into bytes (e.g., RGBA 8:8:8:8 or BGR 8:8:8 true color).
- But because of this simplifying assumption, the implementation is
- greatly simplified.  */
-static grub_err_t
-scale_bilinear (struct grub_video_bitmap *dst, struct grub_video_bitmap *src)
-{
-  grub_err_t err = verify_bitmaps (dst, src);
+  grub_err_t err = verify_bitmaps(dst, src);
   if (err != GRUB_ERR_NONE)
     return err;
 
@@ -358,70 +303,151 @@ scale_bilinear (struct grub_video_bitmap *dst, struct grub_video_bitmap *src)
   int sstride = src->mode_info.pitch;
   /* bytes_per_pixel is the same for both src and dst. */
   int bytes_per_pixel = dst->mode_info.bytes_per_pixel;
+  unsigned dy, sy, ystep, yfrac, yover;
+  unsigned sx, xstep, xfrac, xover;
+  grub_uint8_t *dptr, *dline_end, *sline;
 
-  unsigned dy;
-  for (dy = 0; dy < dh; dy++)
+  xstep = sw / dw;
+  xover = sw % dw;
+  ystep = sh / dh;
+  yover = sh % dh;
+
+  for (dy = 0, sy = 0, yfrac = 0; dy < dh; dy++, sy += ystep, yfrac += yover)
     {
-      unsigned dx;
-      for (dx = 0; dx < dw; dx++)
+      if (yfrac >= dh)
 	{
-	  grub_uint8_t *dptr;
-	  grub_uint8_t *sptr;
-	  unsigned sx;
-	  unsigned sy;
-	  int comp;
-
-	  /* Compute the source coordinate that the destination coordinate
-	   maps to.  Note: sx/sw = dx/dw  =>  sx = sw*dx/dw. */
-	  sx = sw * dx / dw;
-	  sy = sh * dy / dh;
-
-	  /* Get the address of the pixels in src and dst. */
-	  dptr = ddata + dy * dstride + dx * bytes_per_pixel;
-	  sptr = sdata + sy * sstride + sx * bytes_per_pixel;
-
-	  /* If we have enough space to do so, use bilinear interpolation.
-	   Otherwise, fall back to nearest neighbor for this pixel. */
-	  if (sx < sw - 1 && sy < sh - 1)
-	    {
-	      /* Do bilinear interpolation. */
-
-	      /* Fixed-point .8 numbers representing the fraction of the
-	       distance in the x (u) and y (v) direction within the
-	       box of 4 pixels in the source. */
-	      int u = (256 * sw * dx / dw) - (sx * 256);
-	      int v = (256 * sh * dy / dh) - (sy * 256);
-
-	      for (comp = 0; comp < bytes_per_pixel; comp++)
-		{
-		  /* Get the component's values for the
-		   four source corner pixels. */
-		  int f00 = sptr[comp];
-		  int f10 = sptr[comp + bytes_per_pixel];
-		  int f01 = sptr[comp + sstride];
-		  int f11 = sptr[comp + sstride + bytes_per_pixel];
-
-		  /* Count coeffecients. */
-		  int c00 = (256 - u) * (256 - v);
-		  int c10 = u * (256 - v);
-		  int c01 = (256 - u) * v;
-		  int c11 = u * v;
-
-		  /* Interpolate. */
-		  int fxy = c00 * f00 + c01 * f01 + c10 * f10 + c11 * f11;
-		  fxy = fxy / (256 * 256);
-
-		  dptr[comp] = fxy;
-		}
-	    }
-	  else
-	    {
-	      /* Fall back to nearest neighbor interpolation. */
-	      /* Copy the pixel color value. */
-	      for (comp = 0; comp < bytes_per_pixel; comp++)
-		dptr[comp] = sptr[comp];
-	    }
+	  yfrac -= dh;
+	  sy++;
 	}
+      dptr = ddata + dy * dstride;
+      dline_end = dptr + dw * bytes_per_pixel;
+      sline = sdata + sy * sstride;
+      for (sx = 0, xfrac = 0; dptr < dline_end; sx += xstep, xfrac += xover, dptr += bytes_per_pixel)
+        {
+          grub_uint8_t *sptr;
+          int comp;
+
+	  if (xfrac >= dw)
+	    {
+	      xfrac -= dw;
+	      sx++;
+	    }
+
+          /* Get the address of the pixels in src and dst. */
+	  sptr = sline + sx * bytes_per_pixel;
+
+	  /* Copy the pixel color value. */
+	  for (comp = 0; comp < bytes_per_pixel; comp++)
+	    dptr[comp] = sptr[comp];
+        }
+    }
+  return GRUB_ERR_NONE;
+}
+
+/* Bilinear interpolation image scaling algorithm.
+
+   Copy the bitmap SRC to the bitmap DST, scaling the bitmap to fit the
+   dimensions of DST.  This function uses the bilinear interpolation algorithm
+   to interpolate the pixels.
+
+   Supports only direct color modes which have components separated
+   into bytes (e.g., RGBA 8:8:8:8 or BGR 8:8:8 true color).
+   But because of this simplifying assumption, the implementation is
+   greatly simplified.  */
+static grub_err_t
+scale_bilinear (struct grub_video_bitmap *dst, struct grub_video_bitmap *src)
+{
+  grub_err_t err = verify_bitmaps(dst, src);
+  if (err != GRUB_ERR_NONE)
+    return err;
+
+  grub_uint8_t *ddata = dst->data;
+  grub_uint8_t *sdata = src->data;
+  unsigned dw = dst->mode_info.width;
+  unsigned dh = dst->mode_info.height;
+  unsigned sw = src->mode_info.width;
+  unsigned sh = src->mode_info.height;
+  int dstride = dst->mode_info.pitch;
+  int sstride = src->mode_info.pitch;
+  /* bytes_per_pixel is the same for both src and dst. */
+  int bytes_per_pixel = dst->mode_info.bytes_per_pixel;
+  unsigned dy, syf, sy, ystep, yfrac, yover;
+  unsigned sxf, sx, xstep, xfrac, xover;
+  grub_uint8_t *dptr, *dline_end, *sline;
+
+  xstep = (sw << 8) / dw;
+  xover = (sw << 8) % dw;
+  ystep = (sh << 8) / dh;
+  yover = (sh << 8) % dh;
+
+  for (dy = 0, syf = 0, yfrac = 0; dy < dh; dy++, syf += ystep, yfrac += yover)
+    {
+      if (yfrac >= dh)
+	{
+	  yfrac -= dh;
+	  syf++;
+	}
+      sy = syf >> 8;
+      dptr = ddata + dy * dstride;
+      dline_end = dptr + dw * bytes_per_pixel;
+      sline = sdata + sy * sstride;
+      for (sxf = 0, xfrac = 0; dptr < dline_end; sxf += xstep, xfrac += xover, dptr += bytes_per_pixel)
+        {
+          grub_uint8_t *sptr;
+          int comp;
+
+	  if (xfrac >= dw)
+	    {
+	      xfrac -= dw;
+	      sxf++;
+	    }
+
+          /* Get the address of the pixels in src and dst. */
+	  sx = sxf >> 8;
+	  sptr = sline + sx * bytes_per_pixel;
+
+          /* If we have enough space to do so, use bilinear interpolation.
+             Otherwise, fall back to nearest neighbor for this pixel. */
+          if (sx < sw - 1 && sy < sh - 1)
+            {
+              /* Do bilinear interpolation. */
+
+              /* Fixed-point .8 numbers representing the fraction of the
+                 distance in the x (u) and y (v) direction within the
+                 box of 4 pixels in the source. */
+              unsigned u = sxf & 0xff;
+              unsigned v = syf & 0xff;
+
+              for (comp = 0; comp < bytes_per_pixel; comp++)
+                {
+                  /* Get the component's values for the
+                     four source corner pixels. */
+                  unsigned f00 = sptr[comp];
+                  unsigned f10 = sptr[comp + bytes_per_pixel];
+                  unsigned f01 = sptr[comp + sstride];
+                  unsigned f11 = sptr[comp + sstride + bytes_per_pixel];
+
+                  /* Count coeffecients. */
+                  unsigned c00 = (256 - u) * (256 - v);
+                  unsigned c10 = u * (256 - v);
+                  unsigned c01 = (256 - u) * v;
+                  unsigned c11 = u * v;
+
+                  /* Interpolate. */
+                  unsigned fxy = c00 * f00 + c01 * f01 + c10 * f10 + c11 * f11;
+                  fxy = fxy >> 16;
+
+                  dptr[comp] = fxy;
+                }
+            }
+          else
+            {
+              /* Fall back to nearest neighbor interpolation. */
+              /* Copy the pixel color value. */
+              for (comp = 0; comp < bytes_per_pixel; comp++)
+                dptr[comp] = sptr[comp];
+            }
+        }
     }
   return GRUB_ERR_NONE;
 }

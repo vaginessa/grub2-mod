@@ -1,7 +1,7 @@
 /* gui_list.c - GUI component to display a selectable list of items.  */
 /*
  *  GRUB  --  GRand Unified Bootloader
- *  Copyright (C) 2008,2009  Free Software Foundation, Inc.
+ *  Copyright (C) 2008,2009,2017  Free Software Foundation, Inc.
  *
  *  GRUB is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -130,6 +130,9 @@ get_num_shown_items (list_impl_t self)
   int sel_bottom_pad = selbox->get_bottom_pad (selbox);
   int max_top_pad = grub_max (item_top_pad, sel_top_pad);
   int max_bottom_pad = grub_max (item_bottom_pad, sel_bottom_pad);
+
+  if (item_height + item_vspace <= 0)
+    return 1;
 
   return (self->bounds.height + item_vspace - 2 * boxpad
           - max_top_pad - max_bottom_pad
@@ -409,9 +412,9 @@ draw_menu (list_impl_t self, int num_shown_items)
           icon_top_offset = sel_icon_top_offset;
           viewport_width = sel_viewport_width;
 
-	  /* Tell the animation point to who.  */
-	  self->view->point_x = oviewport.x;
-	  self->view->point_y = oviewport.y + item_top + boxpad + sel_box_top_offset;
+    	  /* Tell the animation point to who.  */
+    	  self->view->point_x = oviewport.x;
+    	  self->view->point_y = oviewport.y + item_top + boxpad + sel_box_top_offset;
         }
       else
         {
