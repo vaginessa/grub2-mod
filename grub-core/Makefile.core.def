@@ -966,15 +966,6 @@ module = {
 };
 
 module = {
-  name = hwmatch;
-  i386_pc = commands/i386/pc/hwmatch.c;
-  enable = i386_pc;
-  common = gnulib/regex.c;
-  cflags = '$(CFLAGS_POSIX) $(CFLAGS_GNULIB)';
-  cppflags = '$(CPPFLAGS_POSIX) $(CPPFLAGS_GNULIB)';
-};
-
-module = {
   name = getkey;
   common = commands/getkey.c;
 };
@@ -1835,13 +1826,6 @@ module = {
   arm64 = loader/arm64/linux.c;
   common = loader/linux.c;
   common = lib/cmdline.c;
-  enable = noemu;
-};
-
- module = {
-  name = android;
-  x86 = loader/android.c;
-  i386_pc = lib/i386/pc/vesa_modes_table.c;
   enable = noemu;
 };
 

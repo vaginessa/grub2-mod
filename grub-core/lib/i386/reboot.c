@@ -23,6 +23,8 @@
 #include <grub/cpu/reboot.h>
 #include <grub/i386/floppy.h>
 
+#if defined (GRUB_MACHINE_EFI)
+#else
 void
 grub_reboot (void)
 {
@@ -58,3 +60,4 @@ grub_reboot (void)
 
   while (1);
 }
+#endif
