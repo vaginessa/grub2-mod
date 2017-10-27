@@ -720,15 +720,15 @@ grub_udf_mount (grub_disk_t disk)
 
       tag.tag_ident = U16 (tag.tag_ident);
       if (tag.tag_ident == GRUB_UDF_TAG_IDENT_PVD)
-       {
-         if (grub_disk_read (disk, block << lbshift, 0,
-                             sizeof (struct grub_udf_pvd),
-                             &data->pvd))
-           {
-             grub_error (GRUB_ERR_BAD_FS, "not an UDF filesystem");
-             goto fail;
-           }
-       }
+	{
+	  if (grub_disk_read (disk, block << lbshift, 0,
+			      sizeof (struct grub_udf_pvd),
+			      &data->pvd))
+	    {
+	      grub_error (GRUB_ERR_BAD_FS, "not an UDF filesystem");
+	      goto fail;
+	    }
+	}
       else if (tag.tag_ident == GRUB_UDF_TAG_IDENT_PD)
 	{
 	  if (data->npd >= GRUB_UDF_MAX_PDS)
@@ -858,7 +858,7 @@ grub_udf_get_cluster_sector (grub_disk_t disk, grub_uint64_t *sec_per_lcn)
 #endif
 
 static char *
-read_string (const grub_uint8_t *raw, grub_size_t sz, char *outbuf, int normalize_utf8)
+read_string (const grub_uint8_t *raw, grub_size_t sz, char *outbuf)
 {
   grub_uint16_t *utf16 = NULL;
   grub_size_t utf16len = 0;
@@ -868,15 +868,6 @@ read_string (const grub_uint8_t *raw, grub_size_t sz, char *outbuf, int normaliz
 
   if (raw[0] != 8 && raw[0] != 16)
     return NULL;
-
-  if (raw[0] == 8 && !normalize_utf8)
-    {
-      if (!outbuf)
-        outbuf = grub_strndup ((char *)raw + 1, sz - 1);
-      else
-        grub_memcpy (outbuf, raw + 1, sz - 1);
-      return outbuf;
-    }
 
   if (raw[0] == 8)
     {
@@ -904,6 +895,25 @@ read_string (const grub_uint8_t *raw, grub_size_t sz, char *outbuf, int normaliz
     *grub_utf16_to_utf8 ((grub_uint8_t *) outbuf, utf16, utf16len) = '\0';
   grub_free (utf16);
   return outbuf;
+}
+
+static char *
+read_dstring (const grub_uint8_t *raw, grub_size_t sz)
+{
+  grub_size_t len;
+
+  if (raw[0] == 0) {
+      char *outbuf = grub_malloc (1);
+      if (!outbuf)
+	return NULL;
+      outbuf[0] = 0;
+      return outbuf;
+    }
+
+  len = raw[sz - 1];
+  if (len > sz - 1)
+    len = sz - 1;
+  return read_string (raw, len, NULL);
 }
 
 static int
@@ -969,7 +979,7 @@ grub_udf_iterate_dir (grub_fshelp_node_t dir,
 		  != dirent.file_ident_length)
 		return 0;
 
-	      filename = read_string (raw, dirent.file_ident_length, 0, 1);
+	      filename = read_string (raw, dirent.file_ident_length, 0);
 	      if (!filename)
 		grub_print_error ();
 
@@ -1055,7 +1065,7 @@ grub_udf_read_symlink (grub_fshelp_node_t node)
 	  /* in 4 + n bytes. out, at most: 1 + 2 * n bytes.  */
 	  if (optr != out)
 	    *optr++ = '/';
-	  if (!read_string (ptr + 4, s - 4, optr, 1))
+	  if (!read_string (ptr + 4, s - 4, optr))
 	    goto fail;
 	  optr += grub_strlen (optr);
 	  break;
@@ -1243,7 +1253,7 @@ grub_udf_label (grub_device_t device, char **label)
 
   if (data)
     {
-      *label = read_string (data->lvd.ident, sizeof (data->lvd.ident), 0, 1);
+      *label = read_dstring (data->lvd.ident, sizeof (data->lvd.ident));
       grub_free (data);
     }
   else
@@ -1257,7 +1267,7 @@ gen_uuid_from_volset (char *volset_ident)
 {
   grub_size_t i;
   grub_size_t len;
-  grub_size_t binpos;
+  grub_size_t nonhexpos;
   grub_uint8_t buf[17];
   char *uuid;
 
@@ -1275,31 +1285,33 @@ gen_uuid_from_volset (char *volset_ident)
   grub_memset (buf, 0, sizeof (buf));
   grub_memcpy (buf, volset_ident, len);
 
-  binpos = 16;
-  for (i = 0; i < len; ++i)
+  nonhexpos = 16;
+  for (i = 0; i < 16; ++i)
     {
-      if (!grub_isalnum (buf[i]))
+      if (!grub_isxdigit (buf[i]))
         {
-          binpos = i;
+          nonhexpos = i;
           break;
         }
     }
 
-  if (binpos < 8)
+  if (nonhexpos < 8)
     {
       grub_snprintf (uuid, 17, "%02x%02x%02x%02x%02x%02x%02x%02x",
                     buf[0], buf[1], buf[2], buf[3],
                     buf[4], buf[5], buf[6], buf[7]);
     }
-  else if (binpos < 16)
+  else if (nonhexpos < 16)
     {
-      grub_memcpy (uuid, buf, 8);
+      for (i = 0; i < 8; ++i)
+        uuid[i] = grub_tolower (buf[i]);
       grub_snprintf (uuid+8, 9, "%02x%02x%02x%02x",
                     buf[8], buf[9], buf[10], buf[11]);
     }
   else
     {
-      grub_memcpy (uuid, buf, 16);
+      for (i = 0; i < 16; ++i)
+        uuid[i] = grub_tolower (buf[i]);
       uuid[16] = 0;
     }
 
@@ -1315,7 +1327,7 @@ grub_udf_uuid (grub_device_t device, char **uuid)
 
   if (data)
     {
-      volset_ident = read_string (data->pvd.volset_ident, sizeof (data->pvd.volset_ident), 0, 0);
+      volset_ident = read_dstring (data->pvd.volset_ident, sizeof (data->pvd.volset_ident));
       if (volset_ident)
         {
           *uuid = gen_uuid_from_volset (volset_ident);
