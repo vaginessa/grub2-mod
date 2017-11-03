@@ -972,11 +972,11 @@ run_menu (grub_menu_t menu, int nested, int *auto_boot)
 	      menu_fini ();
 	      if (sound_open)
 	        player_fini ();
-		{
+		  {
 		  grub_menu_entry_t e = grub_menu_get_entry (menu, current_entry);
 		  if (e)
 		    grub_menu_entry_run (e);
-		}
+		  }
 	      goto refresh;
 
 	    default:
