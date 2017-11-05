@@ -1436,6 +1436,11 @@ module = {
 };
 
 module = {
+  name = fb;
+  common = fs/fb.c;
+};
+
+module = {
   name = f2fs;
   common = fs/f2fs.c;
 };
