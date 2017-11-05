@@ -27,6 +27,8 @@
 
 GRUB_MOD_LICENSE ("GPLv3+");
 
+int fb_ver_minor = 6;
+
 struct grub_fb_data
 {
   grub_uint32_t ofs;
@@ -73,7 +75,10 @@ grub_fbfs_mount (grub_disk_t disk)
       pri_size = d->pri_size;
     }
 
-  if ((d->ver_major != FB_VER_MAJOR) || (d->ver_minor != FB_VER_MINOR))
+  if (d->ver_minor == 7)
+    fb_ver_minor = 7;
+
+  if ((d->ver_major != 1) || (d->ver_minor != 6 && d->ver_minor != 7))
     goto fail;
 
   list_used = d->list_used;
@@ -135,11 +140,12 @@ grub_fbfs_dir (grub_device_t device, const char *path,
   while (p->size)
     {
       info.mtime = grub_le_to_cpu32 (p->data_time);
-      if ((! grub_memcmp (path, p->name, len)) &&
-	  (hook (p->name + ofs, &info, closure)))
+      if ((! grub_memcmp (path, p->name + ((fb_ver_minor==6)?0:4), len)) &&
+	  (hook (p->name + ofs + ((fb_ver_minor==6)?0:4), &info, closure)))
 	break;
 
       p = (struct fbm_file *) ((char *) p + p->size + 2);
+
     }
 
   grub_free (data);
@@ -162,7 +168,7 @@ grub_fbfs_open (struct grub_file *file, const char *name)
   p = (struct fbm_file *) data->fb_list;
   while (p->size)
     {
-      if (! grub_strcasecmp (name, p->name))
+      if (! grub_strcasecmp (name, p->name + ((fb_ver_minor==6)?0:4)))
 	{
 	  file->data = data;
 	  data->ptr = p;
@@ -171,6 +177,7 @@ grub_fbfs_open (struct grub_file *file, const char *name)
 	}
 
       p = (struct fbm_file *) ((char *) p + p->size + 2);
+
     }
 
   return grub_error (GRUB_ERR_FILE_NOT_FOUND, "file not found");
@@ -187,7 +194,6 @@ grub_fbfs_read (grub_file_t file, char *buf, grub_size_t len)
 
   disk = file->device->disk;
   disk->read_hook = file->read_hook;
-  //disk->closure = file->closure;
 
   data = file->data;
   p = data->ptr;

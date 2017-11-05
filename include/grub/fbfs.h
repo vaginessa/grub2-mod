@@ -25,9 +25,6 @@
 #define FB_AR_MAGIC		"FBAR"
 #define FB_AR_MAGIC_LONG	0x52414246
 
-#define FB_VER_MAJOR	1
-#define FB_VER_MINOR	6
-
 struct fb_mbr
 {
   grub_uint8_t jmp_code;
