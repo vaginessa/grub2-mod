@@ -777,6 +777,42 @@ grub_lua_add_menu (lua_State *state)
 }
 
 static int
+grub_lua_add_icon_menu (lua_State *state)
+{
+  int n;
+  
+  const char *source;
+  source = luaL_checklstring (state, 2, 0);
+  n = lua_gettop (state) - 2;
+  if (n > 0)
+    {
+      const char **args;
+      char *p;
+      int i;
+      char **class;
+      class = grub_malloc (sizeof (class[0]));
+      class[0] = grub_strdup (luaL_checklstring (state, 1, 0));
+      args = grub_malloc (n * sizeof (args[0]));
+      if (!args)
+	return push_result (state);
+      for (i = 0; i < n; i++)
+	args[i] = luaL_checkstring (state, 3 + i);
+
+      p = grub_strdup (source);
+      if (! p)
+	return push_result (state);
+      grub_normal_add_menu_entry (n, args, class, NULL, NULL, NULL, NULL, p, 0, 0);
+    }
+  else
+    {
+      lua_pushstring (state, "not enough parameter");
+      lua_error (state);
+    }
+
+  return push_result (state);
+}
+
+static int
 grub_lua_read_byte (lua_State *state)
 {
   grub_addr_t addr;
@@ -1011,6 +1047,7 @@ luaL_Reg grub_lua_lib[] =
     {"file_crc32", grub_lua_file_crc32},
     {"hexdump", grub_lua_hexdump},
     {"add_menu", grub_lua_add_menu},
+    {"add_icon_menu", grub_lua_add_icon_menu},
     {"read_byte", grub_lua_read_byte},
     {"read_word", grub_lua_read_word},
     {"read_dword", grub_lua_read_dword},
