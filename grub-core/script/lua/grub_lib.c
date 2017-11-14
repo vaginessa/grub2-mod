@@ -30,6 +30,7 @@
 #include <grub/file.h>
 #include <grub/menu.h>
 #include <grub/device.h>
+#include <grub/i18n.h>
 #include <grub/lib/crc.h>
 #include <grub/lib/hexdump.h>
 
@@ -1025,6 +1026,15 @@ grub_lua_read (lua_State *state __attribute__ ((unused)))
   return 1;
 }
 
+static int
+grub_lua_gettext (lua_State *state)
+{
+  const char *translation;
+  translation = luaL_checkstring (state, 1);
+  lua_pushstring (state, grub_gettext (translation));
+  return 1;
+}
+
 luaL_Reg grub_lua_lib[] =
   {
     {"run", grub_lua_run},
@@ -1065,5 +1075,6 @@ luaL_Reg grub_lua_lib[] =
     {"getkey_noblock", grub_lua_getkey_noblock},
     {"getkey", grub_lua_getkey},
     {"read", grub_lua_read},
+    {"gettext", grub_lua_gettext},
     {0, 0}
   };
