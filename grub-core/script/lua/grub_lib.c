@@ -781,7 +781,6 @@ static int
 grub_lua_add_icon_menu (lua_State *state)
 {
   int n;
-  
   const char *source;
   source = luaL_checklstring (state, 2, 0);
   n = lua_gettop (state) - 2;
@@ -790,9 +789,10 @@ grub_lua_add_icon_menu (lua_State *state)
       const char **args;
       char *p;
       int i;
-      char **class;
+      char **class = NULL;
       class = grub_malloc (sizeof (class[0]));
       class[0] = grub_strdup (luaL_checklstring (state, 1, 0));
+      class[1] = NULL;
       args = grub_malloc (n * sizeof (args[0]));
       if (!args)
 	return push_result (state);
@@ -802,14 +802,15 @@ grub_lua_add_icon_menu (lua_State *state)
       p = grub_strdup (source);
       if (! p)
 	return push_result (state);
+	   grub_dprintf ("lua", "create menu_entry %s\n", args[0]);
       grub_normal_add_menu_entry (n, args, class, NULL, NULL, NULL, NULL, p, 0, 0);
+      grub_dprintf ("lua", "menu_entry created\n");
     }
   else
     {
       lua_pushstring (state, "not enough parameter");
       lua_error (state);
     }
-
   return push_result (state);
 }
 
