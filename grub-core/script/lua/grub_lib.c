@@ -705,7 +705,9 @@ grub_lua_hexdump (lua_State *state)
   grub_disk_addr_t skip;
   grub_size_t var_len;
   char *var_buf = NULL;
+  char *var_hex = NULL;
   char *p = NULL;
+  char *s = NULL;
 
   luaL_checktype (state, 1, LUA_TLIGHTUSERDATA);
   file = lua_touserdata (state, 1);
@@ -714,8 +716,11 @@ grub_lua_hexdump (lua_State *state)
 
   var_len = length + 1;
   var_buf = (char *) grub_malloc (var_len);
+  var_hex = (char *) grub_malloc (3 * var_len);
   if (var_buf)
     p = var_buf;
+  if (var_hex)
+    s = var_hex;
   if (file)
     {
       file->offset = skip;
@@ -735,11 +740,17 @@ grub_lua_hexdump (lua_State *state)
 	}
       grub_size_t i;
       *p = 0;
+      *s = 0;
       for (i = 0; i < var_len - 1; i++)
-        var_buf[i] = ((var_buf[i] >= 32) && (var_buf[i] < 127)) ? var_buf[i] : '.';
+             {
+	     var_hex = grub_xasprintf ("%s %02x", var_hex, (unsigned char) var_buf[i]);
+	     var_buf[i] = ((var_buf[i] >= 32) && (var_buf[i] < 127)) ? var_buf[i] : '.';
+             }
       lua_pushstring (state, var_buf);
+      lua_pushstring (state, var_hex);
+      return 2;
     }
-  return 1;
+  return 0;
 }
 
 static int
