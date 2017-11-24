@@ -33,6 +33,10 @@
 #include <grub/i18n.h>
 #include <grub/lib/crc.h>
 #include <grub/lib/hexdump.h>
+#include <grub/video.h>
+#include <grub/bitmap.h>
+#include <grub/time.h>
+#include <grub/gfxmenu_view.h>
 
 #ifdef ENABLE_LUA_PCI
 #include <grub/pci.h>
@@ -1090,3 +1094,91 @@ luaL_Reg grub_lua_lib[] =
     {"gettext", grub_lua_gettext},
     {0, 0}
   };
+
+/* Lua function: get_time_ms() : returns the time in milliseconds.  */
+static int
+l_sys_get_time_ms (lua_State *L)
+{
+  lua_pushinteger (L, grub_get_time_ms ());
+  return 1;
+}
+
+/* Lua function: input.getkey() : returns { ASCII char, scan code }.  */
+static int
+l_input_getkey (lua_State *L)
+{
+  int c = grub_getkey();
+  lua_pushinteger (L, c & 0xFF);          /* Push ASCII character code.  */
+  lua_pushinteger (L, (c >> 8) & 0xFF);   /* Push the scan code.  */
+  return 2;
+}
+
+/* Lua function: video.swap_buffers().  */
+static int
+l_video_swap_buffers (lua_State *L)
+{
+  if (grub_video_swap_buffers () != GRUB_ERR_NONE)
+    return luaL_error (L, "Error swapping video buffers: %s", grub_errmsg);
+  return 0;
+}
+
+static grub_video_color_t
+check_grub_color (lua_State *L, int narg)
+{
+  /* Get the color components.  */
+  luaL_argcheck (L, lua_istable (L, narg), narg, "should be a color");
+  lua_getfield (L, narg, "r");
+  lua_getfield (L, narg, "g");
+  lua_getfield (L, narg, "b");
+  lua_getfield (L, narg, "a");
+  grub_video_color_t color;
+  color = grub_video_map_rgba (luaL_checkint (L, -4),
+                               luaL_checkint (L, -3),
+                               luaL_checkint (L, -2),
+                               luaL_optint (L, -1, 255));
+  lua_pop (L, 4);
+  return color;
+}
+
+/* Lua function: video.fill_rect(color, x, y, width, height). */
+static int
+l_video_fill_rect (lua_State *L)
+{
+  grub_video_color_t color = check_grub_color (L, 1);
+  int x = luaL_checkint (L, 2);
+  int y = luaL_checkint (L, 3);
+  int w = luaL_checkint (L, 4);
+  int h = luaL_checkint (L, 5);
+  if (grub_video_fill_rect (color, x, y, w, h) != GRUB_ERR_NONE)
+    return luaL_error (L, "Error filling rectangle: %s", grub_errmsg);
+  return 0;
+}
+
+/* Lua function: video.draw_string(text, font, color, x, y). */
+static int
+l_video_draw_string (lua_State *L)
+{
+  grub_font_draw_string (luaL_checkstring (L, 1),
+                          grub_font_get (luaL_checkstring (L, 2)),
+                          check_grub_color (L, 3),
+                          luaL_checkint (L, 4),
+                          luaL_checkint (L, 5));
+  return 0;
+}
+
+luaL_reg syslib[] = {
+    {"get_time_ms", l_sys_get_time_ms},
+    {0, 0}
+};
+
+luaL_reg inputlib[] = {
+    {"getkey", l_input_getkey},
+    {0, 0}
+};
+
+luaL_reg videolib[] = {
+    {"swap_buffers", l_video_swap_buffers},
+    {"fill_rect", l_video_fill_rect},
+    {"draw_string", l_video_draw_string},
+    {0, 0}
+};

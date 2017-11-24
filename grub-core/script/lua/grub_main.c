@@ -214,6 +214,9 @@ GRUB_MOD_INIT (lua)
       lua_gc (state, LUA_GCSTOP, 0);
       luaL_openlibs (state);
       luaL_register (state, "grub", grub_lua_lib);
+      luaL_register (state, "video", videolib);
+      luaL_register (state, "input", inputlib);
+      luaL_register (state, "sys", syslib);
       lua_gc (state, LUA_GCRESTART, 0);
       cmd = grub_register_command ("lua", grub_cmd_lua, N_("[FILE]"),
 				   N_ ("Run lua script FILE or start interactive lua shell"));
