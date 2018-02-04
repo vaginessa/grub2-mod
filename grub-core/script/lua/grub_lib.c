@@ -810,6 +810,16 @@ grub_lua_add_menu (lua_State *state)
 }
 
 static int
+grub_lua_clear_menu (lua_State *state __attribute__ ((unused)))
+{
+  grub_menu_t menu = grub_env_get_menu();
+
+  menu->entry_list = NULL;
+  menu->size=0;
+  return 0;
+}
+
+static int
 grub_lua_add_icon_menu (lua_State *state)
 {
   int n;
@@ -1092,6 +1102,7 @@ luaL_Reg grub_lua_lib[] =
     {"hexdump", grub_lua_hexdump},
     {"add_menu", grub_lua_add_menu},
     {"add_icon_menu", grub_lua_add_icon_menu},
+    {"clear_menu", grub_lua_clear_menu},
     {"read_byte", grub_lua_read_byte},
     {"read_word", grub_lua_read_word},
     {"read_dword", grub_lua_read_dword},
