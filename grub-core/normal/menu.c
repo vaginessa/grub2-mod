@@ -1104,5 +1104,11 @@ grub_show_menu (grub_menu_t menu, int nested, int autoboot)
       break;
     }
 
+  if (nested && grub_normal_exit_level == -1)
+    {
+      menu_fini();
+      grub_normal_exit_level++;
+    }
+
   return err1;
 }
