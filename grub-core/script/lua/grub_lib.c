@@ -342,6 +342,23 @@ grub_lua_setenv (lua_State *state)
   return 0;
 }
 
+static int
+grub_lua_exportenv (lua_State *state)
+{
+  const char *name, *value;
+
+  name = luaL_checkstring (state, 1);
+  value = luaL_checkstring (state, 2);
+
+  if (name[0])
+    {
+    grub_env_export (name);
+    if (value[0])
+      grub_env_set (name, value);
+    }
+
+  return 0;
+}
 /* Helper for grub_lua_enum_device.  */
 static int
 grub_lua_enum_device_iter (const char *name, void *data)
@@ -1056,6 +1073,7 @@ luaL_Reg grub_lua_lib[] =
     {"run", grub_lua_run},
     {"getenv", grub_lua_getenv},
     {"setenv", grub_lua_setenv},
+    {"exportenv", grub_lua_exportenv},
     {"enum_device", grub_lua_enum_device},
     {"enum_file", grub_lua_enum_file},
 #ifdef ENABLE_LUA_PCI
