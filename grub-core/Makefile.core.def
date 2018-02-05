@@ -820,6 +820,11 @@ module = {
 };
 
 module = {
+  name = bqcat;
+  common = commands/bqcat.c;
+};
+
+module = {
   name = cmp;
   common = commands/cmp.c;
 };
