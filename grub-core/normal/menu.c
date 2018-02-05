@@ -1043,7 +1043,7 @@ notify_execution_failure (void *userdata __attribute__((unused)))
     }
   grub_printf ("\n  ");
   grub_printf_ (N_("Failed to boot both default and fallback entries.\n"));
-  grub_wait_after_message ();
+  //grub_wait_after_message ();
 }
 
 /* Callbacks used by the text menu to provide user feedback when menu entries
