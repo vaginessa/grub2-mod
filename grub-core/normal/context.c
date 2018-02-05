@@ -203,7 +203,6 @@ grub_cmd_export (struct grub_command *cmd __attribute__ ((unused)),
       goto export;
     val[0] = 0;
     grub_env_set (var, val + 1);
-    val[0] = '=';
   export:
     grub_env_export (args[i]);
     }
