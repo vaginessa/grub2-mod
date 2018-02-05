@@ -1,6 +1,6 @@
 /*
  *  GRUB  --  GRand Unified Bootloader
- *  Copyright (C) 2009  Free Software Foundation, Inc.
+ *  Copyright (C) 2009,2018  Free Software Foundation, Inc.
  *
  *  GRUB is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -844,9 +844,7 @@ grub_lua_add_icon_menu (lua_State *state)
       p = grub_strdup (source);
       if (! p)
 	return push_result (state);
-	   grub_dprintf ("lua", "create menu_entry %s\n", args[0]);
       grub_normal_add_menu_entry (n, args, class, NULL, NULL, NULL, NULL, p, 0, 0);
-      grub_dprintf ("lua", "menu_entry created\n");
     }
   else
     {
@@ -855,6 +853,40 @@ grub_lua_add_icon_menu (lua_State *state)
     }
   return push_result (state);
 }
+
+static int
+grub_lua_add_hidden_menu (lua_State *state)
+{
+  int n;
+  const char *source;
+  source = luaL_checklstring (state, 2, 0);
+  n = lua_gettop (state) - 2;
+  if (n > 0)
+    {
+      const char **args;
+      char *p;
+      int i;
+      const char *hotkey;
+      args = grub_malloc (n * sizeof (args[0]));
+      if (!args)
+	return push_result (state);
+      for (i = 0; i < n; i++)
+	args[i] = luaL_checkstring (state, 3 + i);
+
+      p = grub_strdup (source);
+      if (! p)
+	return push_result (state);
+	  hotkey = grub_strdup (luaL_checklstring (state, 1, 0));
+      grub_normal_add_menu_entry (n, args, NULL, NULL, NULL, hotkey, NULL, p, 0, 1);
+    }
+  else
+    {
+      lua_pushstring (state, "not enough parameter");
+      lua_error (state);
+    }
+  return push_result (state);
+}
+
 
 static int
 grub_lua_read_byte (lua_State *state)
@@ -1102,6 +1134,7 @@ luaL_Reg grub_lua_lib[] =
     {"hexdump", grub_lua_hexdump},
     {"add_menu", grub_lua_add_menu},
     {"add_icon_menu", grub_lua_add_icon_menu},
+    {"add_hidden_menu", grub_lua_add_hidden_menu},
     {"clear_menu", grub_lua_clear_menu},
     {"read_byte", grub_lua_read_byte},
     {"read_word", grub_lua_read_word},
