@@ -1,7 +1,7 @@
 /* cat.c - command to show the contents of a file  */
 /*
  *  GRUB  --  GRand Unified Bootloader
- *  Copyright (C) 2003,2005,2007,2008  Free Software Foundation, Inc.
+ *  Copyright (C) 2003,2005,2007,2008,2018  Free Software Foundation, Inc.
  *
  *  GRUB is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,6 +17,7 @@
  *  along with GRUB.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <grub/env.h>
 #include <grub/dl.h>
 #include <grub/file.h>
 #include <grub/disk.h>
@@ -31,6 +32,7 @@ GRUB_MOD_LICENSE ("GPLv3+");
 static const struct grub_arg_option options[] =
   {
     {"dos", -1, 0, N_("Accept DOS-style CR/NL line endings."), 0, 0},
+    {"set", 's', 0, N_("Store the contents of a file in a variable."), N_("VARNAME"), ARG_TYPE_STRING},
     {0, 0, 0, 0, 0, 0}
   };
 
@@ -49,6 +51,8 @@ grub_cmd_cat (grub_extcmd_context_t ctxt, int argc, char **args)
   int utcount = 0;
   int is_0d = 0;
   int j;
+  
+
 
   if (state[0].set)
     dos = 1;
@@ -59,6 +63,24 @@ grub_cmd_cat (grub_extcmd_context_t ctxt, int argc, char **args)
   file = grub_file_open (args[0]);
   if (! file)
     return grub_errno;
+
+  if (state[1].set)
+    {
+    grub_ssize_t done = 0;
+    char* buffer;
+
+    buffer = grub_malloc(file->size + 1);
+    while ((size = grub_file_read (file, buffer + done, file->size - done)) > 0)
+        {
+      done += size;
+        }
+	buffer[done] = '\0';
+	grub_env_set (state[1].arg, buffer);
+	grub_file_close (file);
+	grub_free (buffer);
+	
+	return 0;
+     }
 
   while ((size = grub_file_read (file, buf, sizeof (buf))) > 0
 	 && key != GRUB_TERM_ESC)
