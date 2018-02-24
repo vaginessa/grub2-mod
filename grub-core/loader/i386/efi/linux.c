@@ -200,7 +200,7 @@ grub_cmd_linux (grub_command_t cmd __attribute__ ((unused)),
 		int argc, char *argv[])
 {
   grub_file_t file = 0;
-  struct linux_kernel_header lh;
+  struct linux_i386_kernel_header lh;
   grub_ssize_t len, start, filelen;
   void *kernel;
 
