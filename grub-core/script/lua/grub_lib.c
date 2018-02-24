@@ -1049,24 +1049,6 @@ static int grub_lua_toutf8(lua_State *L) {
 }
 
 static int
-grub_lua_getkey_noblock (lua_State *state __attribute__ ((unused)))
-{
-  int key;
-  key = grub_getkey_noblock ();
-  lua_pushinteger (state, key);
-  return 1;
-}
-
-static int
-grub_lua_getkey (lua_State *state __attribute__ ((unused)))
-{
-  int key;
-  key = grub_getkey ();
-  lua_pushinteger (state, key);
-  return 1;
-}
-
-static int
 grub_lua_read (lua_State *state __attribute__ ((unused)))
 {
   int i;
@@ -1151,8 +1133,6 @@ luaL_Reg grub_lua_lib[] =
     {"char", grub_lua_char},
     {"fromutf8", grub_lua_fromutf8},
     {"toutf8", grub_lua_toutf8},
-    {"getkey_noblock", grub_lua_getkey_noblock},
-    {"getkey", grub_lua_getkey},
     {"read", grub_lua_read},
     {"gettext", grub_lua_gettext},
     {0, 0}
@@ -1171,6 +1151,14 @@ static int
 lua_input_getkey (lua_State *state)
 {
   int c = grub_getkey();
+  lua_pushinteger (state, c & 0xFF);          /* Push ASCII character code.  */
+  lua_pushinteger (state, (c >> 8) & 0xFF);   /* Push the scan code.  */
+  return 2;
+}
+static int
+lua_input_getkey_noblock (lua_State *state __attribute__ ((unused)))
+{
+  int c = grub_getkey_noblock ();
   lua_pushinteger (state, c & 0xFF);          /* Push ASCII character code.  */
   lua_pushinteger (state, (c >> 8) & 0xFF);   /* Push the scan code.  */
   return 2;
@@ -1297,6 +1285,7 @@ luaL_reg syslib[] = {
 
 luaL_reg inputlib[] = {
     {"getkey", lua_input_getkey},
+    {"getkey_noblock", lua_input_getkey_noblock},
     {0, 0}
 };
 
