@@ -970,84 +970,6 @@ grub_lua_refresh (lua_State *state __attribute__ ((unused)))
   return 0;
 }
 
-
-static int grub_lua_len (lua_State *L) {
-    const char *e, *s = check_dbcs(L, 1, &e);
-    lua_pushinteger(L, dbcs_length(s, e));
-    return 1;
-}
-
-static int grub_lua_byte(lua_State *L) {
-    const char *e, *s = check_dbcs(L, 1, &e);
-    size_t len = dbcs_length(s, e);
-    int posi = posrelat((int)luaL_optinteger(L, 2, 1), len);
-    int pose = posrelat((int)luaL_optinteger(L, 3, posi), len);
-    const char *start = s;
-    int i, n;
-    if (posi < 1) posi = 1;
-    if (pose > (int)len) pose = len;
-    n = (int)(pose - posi + 1);
-    if (posi + n <= pose) /* (size_t -> int) overflow? */
-        return luaL_error(L, "string slice too long");
-    luaL_checkstack(L, n, "string slice too long");
-    for (i = 0; i < posi; ++i) {
-        unsigned ch;
-        start += dbcs_decode(start, e, &ch);
-    }
-    for (i = 0; i < n; ++i) {
-        unsigned ch;
-        start += dbcs_decode(start, e, &ch);
-        lua_pushinteger(L, ch);
-    }
-    return n;
-}
-
-static int grub_lua_char(lua_State *L) {
-    luaL_Buffer b;
-    int i, top = lua_gettop(L);
-    luaL_buffinit(L, &b);
-    for (i = 1; i <= top; ++i)
-        add_dbcschar(&b, (unsigned)luaL_checkinteger(L, i));
-    luaL_pushresult(&b);
-    return 1;
-}
-
-static int grub_lua_fromutf8(lua_State *L) {
-    int i, top;
-    switch (lua_type(L, 1)) {
-    case LUA_TSTRING:
-        return string_from_utf8(L);
-    case LUA_TNUMBER:
-        top = lua_gettop(L);
-        for (i = 1; i <= top; ++i) {
-            unsigned code = (unsigned)luaL_checkinteger(L, i);
-            lua_pushinteger(L, (lua_Integer)from_utf8(code));
-            lua_replace(L, i);
-        }
-        return top;
-    }
-    return luaL_error(L, "string/number expected, got %s",
-            luaL_typename(L, 1));
-}
-
-static int grub_lua_toutf8(lua_State *L) {
-    int i, top;
-    switch (lua_type(L, 1)) {
-    case LUA_TSTRING:
-        return string_to_utf8(L);
-    case LUA_TNUMBER:
-        top = lua_gettop(L);
-        for (i = 1; i <= top; ++i) {
-            unsigned code = (unsigned)luaL_checkinteger(L, i);
-            lua_pushinteger(L, to_utf8(code));
-            lua_replace(L, i);
-        }
-        return top;
-    }
-    return luaL_error(L, "string/number expected, got %s",
-            luaL_typename(L, 1));
-}
-
 static int
 grub_lua_read (lua_State *state __attribute__ ((unused)))
 {
@@ -1128,11 +1050,6 @@ luaL_Reg grub_lua_lib[] =
     {"cls", grub_lua_cls},
     {"setcolorstate", grub_lua_setcolorstate},
     {"refresh", grub_lua_refresh},
-    {"len", grub_lua_len},
-    {"byte", grub_lua_byte},
-    {"char", grub_lua_char},
-    {"fromutf8", grub_lua_fromutf8},
-    {"toutf8", grub_lua_toutf8},
     {"read", grub_lua_read},
     {"gettext", grub_lua_gettext},
     {0, 0}
@@ -1278,21 +1195,107 @@ lua_video_info (lua_State *state __attribute__ ((unused)))
   return 1;
 }
 
-luaL_reg syslib[] = {
+static int lua_gbk_len (lua_State *state) {
+    const char *e, *s = check_dbcs(state, 1, &e);
+    lua_pushinteger(state, dbcs_length(s, e));
+    return 1;
+}
+
+static int lua_gbk_byte(lua_State *state) {
+    const char *e, *s = check_dbcs(state, 1, &e);
+    size_t len = dbcs_length(s, e);
+    int posi = posrelat((int)luaL_optinteger(state, 2, 1), len);
+    int pose = posrelat((int)luaL_optinteger(state, 3, posi), len);
+    const char *start = s;
+    int i, n;
+    if (posi < 1) posi = 1;
+    if (pose > (int)len) pose = len;
+    n = (int)(pose - posi + 1);
+    if (posi + n <= pose) /* (size_t -> int) overflow? */
+        return luaL_error(state, "string slice too long");
+    luaL_checkstack(state, n, "string slice too long");
+    for (i = 0; i < posi; ++i) {
+        unsigned ch;
+        start += dbcs_decode(start, e, &ch);
+    }
+    for (i = 0; i < n; ++i) {
+        unsigned ch;
+        start += dbcs_decode(start, e, &ch);
+        lua_pushinteger(state, ch);
+    }
+    return n;
+}
+
+static int lua_gbk_char(lua_State *state) {
+    luaL_Buffer b;
+    int i, top = lua_gettop(state);
+    luaL_buffinit(state, &b);
+    for (i = 1; i <= top; ++i)
+        add_dbcschar(&b, (unsigned)luaL_checkinteger(state, i));
+    luaL_pushresult(&b);
+    return 1;
+}
+
+static int lua_gbk_fromutf8(lua_State *state) {
+    int i, top;
+    switch (lua_type(state, 1)) {
+    case LUA_TSTRING:
+        return string_from_utf8(state);
+    case LUA_TNUMBER:
+        top = lua_gettop(state);
+        for (i = 1; i <= top; ++i) {
+            unsigned code = (unsigned)luaL_checkinteger(state, i);
+            lua_pushinteger(state, (lua_Integer)from_utf8(code));
+            lua_replace(state, i);
+        }
+        return top;
+    }
+    return luaL_error(state, "string/number expected, got %s",
+            luaL_typename(state, 1));
+}
+
+static int lua_gbk_toutf8(lua_State *state) {
+    int i, top;
+    switch (lua_type(state, 1)) {
+    case LUA_TSTRING:
+        return string_to_utf8(state);
+    case LUA_TNUMBER:
+        top = lua_gettop(state);
+        for (i = 1; i <= top; ++i) {
+            unsigned code = (unsigned)luaL_checkinteger(state, i);
+            lua_pushinteger(state, to_utf8(code));
+            lua_replace(state, i);
+        }
+        return top;
+    }
+    return luaL_error(state, "string/number expected, got %s",
+            luaL_typename(state, 1));
+}
+
+luaL_Reg syslib[] = {
     {"get_time_ms", lua_sys_get_time_ms},
     {0, 0}
 };
 
-luaL_reg inputlib[] = {
+luaL_Reg inputlib[] = {
     {"getkey", lua_input_getkey},
     {"getkey_noblock", lua_input_getkey_noblock},
     {0, 0}
 };
 
-luaL_reg videolib[] = {
+luaL_Reg videolib[] = {
     {"swap_buffers", lua_video_swap_buffers},
     {"fill_rect", lua_video_fill_rect},
     {"draw_string", lua_video_draw_string},
     {"info", lua_video_info},
+    {0, 0}
+};
+
+luaL_Reg gbklib[] = {
+    {"len", lua_gbk_len},
+    {"byte", lua_gbk_byte},
+    {"char", lua_gbk_char},
+    {"fromutf8", lua_gbk_fromutf8},
+    {"toutf8", lua_gbk_toutf8},
     {0, 0}
 };
