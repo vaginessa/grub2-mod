@@ -229,6 +229,8 @@ grub_cmd_chainloader (grub_command_t cmd __attribute__ ((unused)),
   if (devname)
     grub_free (devname);
   if (! dev)
+    dev = grub_device_open (0);
+  if (! dev)
     goto fail;
 
   if (dev->disk)
