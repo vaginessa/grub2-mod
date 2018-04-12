@@ -779,6 +779,12 @@ script = {
 
 script = {
   testcase;
+  name = f2fs_test;
+  common = tests/f2fs_test.in;
+};
+
+script = {
+  testcase;
   name = nilfs2_test;
   common = tests/nilfs2_test.in;
 };

@@ -222,14 +222,12 @@ grub_cmd_chainloader (grub_command_t cmd __attribute__ ((unused)),
   file = grub_file_open (filename);
   if (! file)
     goto fail;
-
+  dev = grub_device_open (0);
   /* Get the device path from filename. */
-  char *devname = grub_file_get_device_name (filename);
-  dev = grub_device_open (devname);
-  if (devname)
-    grub_free (devname);
-  if (! dev)
-    dev = grub_device_open (0);
+//  char *devname = grub_file_get_device_name (filename);
+//  dev = grub_device_open (devname);
+//  if (devname)
+//    grub_free (devname);
   if (! dev)
     goto fail;
 
