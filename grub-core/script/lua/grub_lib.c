@@ -30,6 +30,7 @@
 #include <grub/term.h>
 #include <grub/file.h>
 #include <grub/menu.h>
+#include <grub/misc.h>
 #include <grub/device.h>
 #include <grub/i18n.h>
 #include <grub/lib/crc.h>
@@ -1074,6 +1075,19 @@ lua_sys_random (lua_State *state)
   return 1;
 }
 
+static int
+lua_input_read (lua_State *state)
+{
+  char *line = grub_getline ();
+  if (! line)
+    lua_pushnil(state);
+  else
+    lua_pushstring (state, line);
+
+  grub_free (line);
+  return 1;
+}
+
 /* Lua function: input.getkey() : returns { ASCII char, scan code }.  */
 static int
 lua_input_getkey (lua_State *state)
@@ -1292,6 +1306,7 @@ luaL_Reg syslib[] = {
 luaL_Reg inputlib[] = {
     {"getkey", lua_input_getkey},
     {"getkey_noblock", lua_input_getkey_noblock},
+    {"read", lua_input_read},
     {0, 0}
 };
 
