@@ -298,7 +298,7 @@ static int db_gethook (lua_State *L) {
   return 3;
 }
 
-
+#if 0
 static int db_debug (lua_State *L) {
   for (;;) {
     char buffer[250];
@@ -314,7 +314,7 @@ static int db_debug (lua_State *L) {
     lua_settop(L, 0);  /* remove eventual returns */
   }
 }
-
+#endif
 
 #define LEVELS1	12	/* size of the first part of the stack */
 #define LEVELS2	10	/* size of the second part of the stack */
@@ -373,7 +373,7 @@ static int db_errorfb (lua_State *L) {
 
 
 static const luaL_Reg dblib[] = {
-  {"debug", db_debug},
+//  {"debug", db_debug},
   {"getfenv", db_getfenv},
   {"gethook", db_gethook},
   {"getinfo", db_getinfo},
