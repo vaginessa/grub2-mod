@@ -1063,6 +1063,17 @@ lua_sys_get_time_ms (lua_State *state)
   return 1;
 }
 
+static int
+lua_sys_random (lua_State *state)
+{
+  uint16_t r = grub_get_time_ms ();
+  uint16_t m;
+  m = luaL_checkinteger (state, 1);
+  r = ((r * 7621) + 1) % 32768;
+  lua_pushinteger (state, r % m);    
+  return 1;
+}
+
 /* Lua function: input.getkey() : returns { ASCII char, scan code }.  */
 static int
 lua_input_getkey (lua_State *state)
@@ -1274,6 +1285,7 @@ static int lua_gbk_toutf8(lua_State *state) {
 
 luaL_Reg syslib[] = {
     {"get_time_ms", lua_sys_get_time_ms},
+    {"random", lua_sys_random},
     {0, 0}
 };
 
